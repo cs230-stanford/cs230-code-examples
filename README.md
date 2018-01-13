@@ -1,0 +1,1 @@
+# Starter code for projects
