@@ -26,6 +26,8 @@ def train(model_spec, model_dir, num_steps):
 
     with tf.Session() as sess:
         sess.run(init_op)
+        # TODO: save and evaluate every epoch
+        #       tqdm in each epoch
         for t in tqdm(range(num_steps)):
             _, loss_val, accuracy_val = sess.run([train_op, loss, accuracy])
             print(loss_val, accuracy_val)
@@ -35,15 +37,20 @@ if __name__ == '__main__':
     # Load the parameters
     args = parser.parse_args()
     json_path = os.path.join(args.model_dir, 'params.json')
-    assert os.path.isfile(json_path)
+    assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
     # Create the input data pipeline
-    inputs = input_fn(True, params)
+    mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
+    train_images = mnist.train.images
+    train_labels = mnist.train.labels.astype(np.int64)
+    inputs = input_fn(True, train_images, train_labels, params)
 
     # Define the model
     model_spec = model(inputs, 'train', params)
 
+    # TODO: add summaries + tensorboard
+    # TODO: add saving and loading in model_dir
     # Train the model
     train_size = 55000
     num_steps = (train_size * params.num_epochs + 1) // params.batch_size

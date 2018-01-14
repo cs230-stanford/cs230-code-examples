@@ -11,7 +11,7 @@ def model(inputs, mode, params):
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
         mode: (string) can be one of 'train', 'eval' and 'predict'
-        params: (object) contains hyperparameters of the model (ex: `params.learning_rate`)
+        params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
 
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
@@ -19,8 +19,13 @@ def model(inputs, mode, params):
     images = inputs['images']
     labels = inputs['labels']
 
-    h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
-    logits = tf.layers.dense(h1, 10)
+    if args.model_version == '3_fc':
+        h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
+        logits = tf.layers.dense(h1, 10)
+    elif args.model_version == 'blabla':
+        pass
+    else:
+        raise NotImplementedError("Unknown model version: {}".format(args.model_version))
 
     # Evaluation metrics
     correct_prediction = tf.equal(tf.argmax(logits, 1), labels)

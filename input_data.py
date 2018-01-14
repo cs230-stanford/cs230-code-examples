@@ -3,25 +3,35 @@
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 
 
-# TODO: add is_training argument in code
-def input_fn(is_training, params):
+def input_fn(is_training, images, labels, params):
     """Input function for MNIST
-    """
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
-    train_images = mnist.train.images
-    train_labels = mnist.train.labels.astype(np.int64)
-    train_size = train_images.shape[0]
 
-    # TODO: check if training or not
-    # TODO: document more each line
-    dataset = (tf.data.Dataset.from_tensor_slices((train_images, train_labels))
-        .shuffle(buffer_size=train_size)
+    Args:
+        is_training: (bool) whether to use the train or test pipeline.
+                     At training, we shuffle the data and have multiple epochs
+        images: (np.ndarray) array of images, with shape (num_samples, 784) and type np.float
+        labels: (np.ndarray) array of labels, with shape (num_samples,) and type np.int64
+        params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
+    """
+    num_samples = images.shape[0]
+    assert images.shape[0] == labels.shape[0],\
+           "Mismatch between images {} and labels {}".format(images.shape[0], labels.shape[0])
+
+    if is_training:
+        buffer_size = num_samples  # whole dataset into the buffer ensures good shuffling
+        repeat_count = params.num_epochs
+    else:
+        buffer_size = 1  # no shuffling
+        repeat_count = 1  # only 1 epoch
+
+    # Create a Dataset serving batches of images and labels
+    dataset = (tf.data.Dataset.from_tensor_slices((images, labels))
+        .shuffle(buffer_size=buffer_size)
         .repeat(params.num_epochs)
         .batch(params.batch_size)
-        .prefetch(1)
+        .prefetch(1)  # make sure you always have one batch ready to serve
     )
 
     iterator = dataset.make_one_shot_iterator()
