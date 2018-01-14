@@ -45,12 +45,11 @@ def model(inputs, mode, params):
     variable_init_op = tf.global_variables_initializer()
 
     # Create the model specification and return it
-    model_spec = dict()
+    model_spec = inputs
     model_spec['accuracy'] = accuracy
     model_spec['loss'] = loss
     model_spec['train_op'] = train_op
     model_spec['variable_init_op'] = variable_init_op
-    model_spec['iterator_init_op'] = inputs['iterator_init_op']
 
     # TODO: for eval, we need to return eval_ops
     return model_spec

@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def input_fn(is_training, images, labels, params):
+def create_dataset(is_training, images, labels, params):
     """Input function for MNIST.
 
     Args:
@@ -36,11 +36,30 @@ def input_fn(is_training, images, labels, params):
         .prefetch(1)  # make sure you always have one batch ready to serve
     )
 
-    # Create an initializable iterator
-    iterator = dataset.make_initializable_iterator()
-    init_op = iterator.intializer
+    return dataset
 
+
+def get_iterator_from_dataset(dataset):
+    """Create a one shot iterator from a dataset.
+    """
+    iterator = dataset.make_one_shot_iterator()
     images, labels = iterator.get_next()
-    inputs = {'images': images, 'labels': labels, 'iterator_init_op': init_op}
+
+    inputs = {'images': images, 'labels': labels}
+    return inputs
+
+
+def get_iterator_from_datasets(train_dataset, eval_dataset):
+    """Create a reinitializable iterator from multiple datasets.
+    """
+    iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
+                                               train_dataset.output_shapes)
+    images, labels = iterator.get_next()
+
+    train_init_op = iterator.make_initializer(train_dataset)
+    eval_init_op = iterator.make_initializer(eval_dataset)
+
+    inputs = {'images': images, 'labels': labels,
+              'train_init_op': train_init_op, 'eval_init_op': eval_init_op}
 
     return inputs
