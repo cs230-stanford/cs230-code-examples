@@ -1,12 +1,9 @@
 {
-    // Training parameters
     "learning_rate": 1e-3,
     "batch_size": 4,
     "num_epochs": 1,
 
-    // Model
-    "model_version": "3_fc",
+    "model_version": "2_fc",
 
-    // Saving
     "save_summary_steps": 100
 }

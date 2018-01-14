@@ -4,7 +4,9 @@
 import argparse
 import os
 
+import numpy as np
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 from tqdm import tqdm
 
 from input_data import input_fn

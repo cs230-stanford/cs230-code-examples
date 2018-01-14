@@ -19,13 +19,11 @@ def model(inputs, mode, params):
     images = inputs['images']
     labels = inputs['labels']
 
-    if args.model_version == '3_fc':
+    if params.model_version == '2_fc':
         h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
         logits = tf.layers.dense(h1, 10)
-    elif args.model_version == 'blabla':
-        pass
     else:
-        raise NotImplementedError("Unknown model version: {}".format(args.model_version))
+        raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 
     # Evaluation metrics
     correct_prediction = tf.equal(tf.argmax(logits, 1), labels)
