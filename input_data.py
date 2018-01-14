@@ -6,7 +6,7 @@ import tensorflow as tf
 
 
 def input_fn(is_training, images, labels, params):
-    """Input function for MNIST
+    """Input function for MNIST.
 
     Args:
         is_training: (bool) whether to use the train or test pipeline.
@@ -20,7 +20,9 @@ def input_fn(is_training, images, labels, params):
            "Mismatch between images {} and labels {}".format(images.shape[0], labels.shape[0])
 
     if is_training:
-        buffer_size = num_samples  # whole dataset into the buffer ensures good shuffling
+        # TODO: remove 100
+        buffer_size = 100  # whole dataset into the buffer ensures good shuffling
+        #buffer_size = num_samples  # whole dataset into the buffer ensures good shuffling
         repeat_count = params.num_epochs
     else:
         buffer_size = 1  # no shuffling
@@ -29,12 +31,16 @@ def input_fn(is_training, images, labels, params):
     # Create a Dataset serving batches of images and labels
     dataset = (tf.data.Dataset.from_tensor_slices((images, labels))
         .shuffle(buffer_size=buffer_size)
-        .repeat(params.num_epochs)
+        #.repeat(params.num_epochs)  TODO: remove
         .batch(params.batch_size)
         .prefetch(1)  # make sure you always have one batch ready to serve
     )
 
-    iterator = dataset.make_one_shot_iterator()
+    # Create an initializable iterator
+    iterator = dataset.make_initializable_iterator()
+    init_op = iterator.intializer
+
     images, labels = iterator.get_next()
-    inputs = {'images': images, 'labels': labels}
+    inputs = {'images': images, 'labels': labels, 'iterator_init_op': init_op}
+
     return inputs

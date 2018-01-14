@@ -1,6 +1,6 @@
 {
     "learning_rate": 1e-3,
-    "batch_size": 4,
+    "batch_size": 32,
     "num_epochs": 1,
 
     "model_version": "2_fc",

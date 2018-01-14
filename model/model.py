@@ -22,6 +22,12 @@ def model(inputs, mode, params):
     if params.model_version == '2_fc':
         h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
         logits = tf.layers.dense(h1, 10)
+    elif params.model_version == '2_conv_1_fc':
+        # TODO: reshape
+        h1 = tf.layers.conv2d(images, 32, 5, padding='valid', activation=tf.nn.relu)
+        h2 = tf.layers.conv2d(h1, 64, 5, padding='valid', activation=tf.nn.relu)
+        # TODO: reshape
+        logits = tf.layers.dense(h2, 10)
     else:
         raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 
@@ -35,13 +41,16 @@ def model(inputs, mode, params):
     global_step = tf.train.get_or_create_global_step()
     train_op = optimizer.minimize(loss, global_step=global_step)
 
-    init_op = tf.global_variables_initializer()
+    # Create initialization operations
+    variable_init_op = tf.global_variables_initializer()
+
     # Create the model specification and return it
     model_spec = dict()
     model_spec['accuracy'] = accuracy
     model_spec['loss'] = loss
     model_spec['train_op'] = train_op
-    model_spec['init_op'] = init_op
+    model_spec['variable_init_op'] = variable_init_op
+    model_spec['iterator_init_op'] = inputs['iterator_init_op']
 
     # TODO: for eval, we need to return eval_ops
     return model_spec
