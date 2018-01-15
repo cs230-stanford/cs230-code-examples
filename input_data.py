@@ -1,7 +1,6 @@
 """Create the input data pipeline using `tf.data`
 """
 
-import numpy as np
 import tensorflow as tf
 
 
@@ -20,18 +19,13 @@ def create_dataset(is_training, images, labels, params):
            "Mismatch between images {} and labels {}".format(images.shape[0], labels.shape[0])
 
     if is_training:
-        # TODO: remove 100
-        buffer_size = 100  # whole dataset into the buffer ensures good shuffling
-        #buffer_size = num_samples  # whole dataset into the buffer ensures good shuffling
-        repeat_count = params.num_epochs
+        buffer_size = num_samples  # whole dataset into the buffer ensures good shuffling
     else:
         buffer_size = 1  # no shuffling
-        repeat_count = 1  # only 1 epoch
 
     # Create a Dataset serving batches of images and labels
     dataset = (tf.data.Dataset.from_tensor_slices((images, labels))
         .shuffle(buffer_size=buffer_size)
-        #.repeat(params.num_epochs)  TODO: remove
         .batch(params.batch_size)
         .prefetch(1)  # make sure you always have one batch ready to serve
     )

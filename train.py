@@ -23,13 +23,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def train(sess, model_spec, model_dir, params, num_steps):
+def train(sess, model_spec, num_steps):
     """Train the model on `num_steps` batches
 
     Args:
+        sess: (tf.Session) current session
         model_spec: (dict) contains the graph operations or nodes needed for training
-        model_dir: (string) directory containing config, weights and log
-        params: (Params) contains hyperparameters of the model
         num_steps: (int) train for this number of batches
     """
     loss = model_spec['loss']
@@ -38,7 +37,7 @@ def train(sess, model_spec, model_dir, params, num_steps):
     metrics = model_spec['metrics']
 
     t = trange(num_steps)
-    for i in t:
+    for _ in t:
         _, loss_val, _ = sess.run([train_op, loss, update_metrics])
         t.set_postfix(loss='{:05.3f}'.format(loss_val))
     sys.stdout.flush()
@@ -54,7 +53,9 @@ def train_and_evaluate(model_spec, model_dir, params):
     """Train the model and evalute every epoch.
 
     Args:
-        TODO
+        model_spec: (dict) contains the graph operations or nodes needed for training
+        model_dir: (string) directory containing config, weights and log
+        params: (Params) contains hyperparameters of the model
     """
     saver = tf.train.Saver()
     best_saver = tf.train.Saver(max_to_keep=1)  # only keep 1 best checkpoint
@@ -71,7 +72,7 @@ def train_and_evaluate(model_spec, model_dir, params):
             sess.run(model_spec['local_metrics_init_op'])
 
             num_steps = (params.train_size + 1) // params.batch_size
-            train(sess, model_spec, model_dir, params, num_steps)
+            train(sess, model_spec, num_steps)
 
             # Save weights
             save_path = os.path.join(model_dir, 'weights', 'after-epoch')
@@ -83,7 +84,7 @@ def train_and_evaluate(model_spec, model_dir, params):
 
             # Evaluate for one epoch on validation set
             num_steps = (params.eval_size + 1) // params.batch_size
-            metrics = evaluate(sess, model_spec, model_dir, params, num_steps)
+            metrics = evaluate(sess, model_spec, num_steps)
 
             # If best_eval, best_save_path
             eval_acc = metrics['accuracy']
@@ -92,8 +93,7 @@ def train_and_evaluate(model_spec, model_dir, params):
                 # Save weights
                 best_save_path = os.path.join(model_dir, 'weights', 'best-eval-acc')
                 best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
-
-
+                tf.logging.info("Found new best accuracy, saving in {}".format(best_save_path))
 
 
 if __name__ == '__main__':

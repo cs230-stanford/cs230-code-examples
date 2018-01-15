@@ -8,7 +8,6 @@ import os
 import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-from tqdm import trange
 
 from input_data import create_dataset
 from input_data import get_iterator_from_dataset
@@ -21,20 +20,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def evaluate(sess, model_spec, model_dir, params, num_steps):
+def evaluate(sess, model_spec, num_steps):
     """Train the model on `num_steps` batches
 
     Args:
+        sess: (tf.Session) current session
         model_spec: (dict) contains the graph operations or nodes needed for training
-        model_dir: (string) directory containing config, weights and log
-        params: (Params) contains hyperparameters of the model
         num_steps: (int) train for this number of batches
     """
-    loss = model_spec['loss']
     update_metrics = model_spec['update_metrics']
     metrics = model_spec['metrics']
 
-    for i in range(num_steps):
+    for _ in range(num_steps):
         sess.run(update_metrics)
 
     tensors = {k: v[0] for k, v in metrics.items()}
@@ -83,7 +80,7 @@ if __name__ == '__main__':
 
         # Evaluate
         num_steps = (params.test_size + 1) // params.batch_size
-        metrics = evaluate(sess, model_spec, args.model_dir, params)
+        metrics = evaluate(sess, model_spec, num_steps)
 
         for key in metrics:
             tf.logging.info("{}: {}".format(key, metrics[key]))

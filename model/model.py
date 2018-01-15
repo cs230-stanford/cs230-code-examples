@@ -4,6 +4,7 @@
 import tensorflow as tf
 
 
+# TODO: instead of using mode, add a parameter "is_training"
 def model(inputs, mode, params):
     """Model function defining the graph operations.
 
