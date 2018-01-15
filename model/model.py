@@ -20,6 +20,8 @@ def model(inputs, mode, params):
     images = inputs['images']
     labels = inputs['labels']
 
+    # -----------------------------------------------------------
+    # MODEL: define the layers of the model
     if params.model_version == '2_fc':
         h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
         logits = tf.layers.dense(h1, 10)
@@ -34,33 +36,48 @@ def model(inputs, mode, params):
     else:
         raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 
+    # Define training metrics
+    predictions = tf.argmax(logits, 1)
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
+
     # Define loss and train_op
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
     optimizer = tf.train.GradientDescentOptimizer(params.learning_rate)
-    global_step = tf.train.get_or_create_global_step()
+    global_step = tf.train.create_global_step()
     train_op = optimizer.minimize(loss, global_step=global_step)
 
-    # Create initialization operations
-    variable_init_op = tf.global_variables_initializer()
-
-    # Metrics for training and evaluation
-    with tf.variable_scope("metrics"):
-        metrics = {
+    # -----------------------------------------------------------
+    # METRICS AND SUMMARIES
+    # Metrics for evaluation using tf.metrics
+    with tf.variable_scope("eval_metrics"):
+        eval_metrics = {
             'accuracy': tf.metrics.accuracy(labels=labels, predictions=tf.argmax(logits, 1)),
             'loss': tf.metrics.mean(loss)
         }
 
+    # Group the update ops for the tf.metrics
+    update_metrics_op = tf.group(*[op for _, op in eval_metrics.values()])
+
+    # Get the op to reset the local variables used in tf.metrics
+    local_metric_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="eval_metrics")
+    local_metrics_init_op = tf.variables_initializer(local_metric_variables)
+
+    # Summaries for training
+    tf.summary.scalar('accuracy', accuracy)
+    tf.summary.scalar('loss', loss)
+
+    # -----------------------------------------------------------
+    # MODEL SPECIFICATION
     # Create the model specification and return it
+    # It contains nodes or operations in the graph that will be used for training and evaluation
     model_spec = inputs
+    model_spec['variable_init_op'] = tf.global_variables_initializer()
     model_spec['loss'] = loss
     model_spec['train_op'] = train_op
-    model_spec['variable_init_op'] = variable_init_op
-    local_metric_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metrics")
-    model_spec['local_metrics_init_op'] = tf.variables_initializer(local_metric_variables)
-    model_spec['metrics'] = metrics
-    update_metrics = [op for _, op in metrics.values()]
-    model_spec['update_metrics'] = tf.group(*update_metrics)
+    model_spec['local_metrics_init_op'] = local_metrics_init_op
+    model_spec['eval_metrics'] = eval_metrics
+    model_spec['update_metrics'] = update_metrics_op
+    model_spec['summary_op'] = tf.summary.merge_all()
 
-    # TODO: for eval, we need to return eval_ops
     return model_spec

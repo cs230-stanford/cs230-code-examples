@@ -20,25 +20,33 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def evaluate(sess, model_spec, num_steps):
+def evaluate(sess, writer, model_spec, num_steps):
     """Train the model on `num_steps` batches
 
     Args:
         sess: (tf.Session) current session
+        writer: (tf.summary.FileWriter) writer for summaries
         model_spec: (dict) contains the graph operations or nodes needed for training
         num_steps: (int) train for this number of batches
     """
     update_metrics = model_spec['update_metrics']
-    metrics = model_spec['metrics']
+    eval_metrics = model_spec['eval_metrics']
+    global_step = tf.train.get_global_step()
 
     for _ in range(num_steps):
         sess.run(update_metrics)
 
-    tensors = {k: v[0] for k, v in metrics.items()}
-
-    metrics_val = sess.run(tensors)
+    # Get the values of the metrics
+    metrics_values = {k: v[0] for k, v in eval_metrics.items()}
+    metrics_val = sess.run(metrics_values)
     metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items())
     logging.info("- Eval metrics: " + metrics_string)
+
+    # Add summaries manually to writer at global_step_val
+    global_step_val = sess.run(global_step)
+    for tag, val in metrics_val.items():
+        summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
+        writer.add_summary(summ, global_step_val)
 
     return metrics_val
 

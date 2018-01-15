@@ -3,7 +3,7 @@
     "batch_size": 32,
     "num_epochs": 10,
 
-    "model_version": "2_conv_1_fc",
+    "model_version": "2_fc",
 
     "save_summary_steps": 100
 }

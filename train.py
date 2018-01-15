@@ -23,28 +23,37 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def train(sess, model_spec, num_steps):
+def train(sess, writer, model_spec, params, num_steps):
     """Train the model on `num_steps` batches
 
     Args:
         sess: (tf.Session) current session
+        writer: (tf.summary.FileWriter) writer for summaries
         model_spec: (dict) contains the graph operations or nodes needed for training
+        params: (Params) hyperparameters
         num_steps: (int) train for this number of batches
     """
     loss = model_spec['loss']
     train_op = model_spec['train_op']
     update_metrics = model_spec['update_metrics']
-    metrics = model_spec['metrics']
+    eval_metrics = model_spec['eval_metrics']
+    summary_op = model_spec['summary_op']
+    global_step = tf.train.get_global_step()
 
     t = trange(num_steps)
-    for _ in t:
-        _, loss_val, _ = sess.run([train_op, loss, update_metrics])
+    for i in t:
+        if i % params.save_summary_steps == 0:
+            _, _, loss_val, summ, global_step_val = sess.run([train_op, update_metrics, loss,
+                                                              summary_op, global_step])
+            writer.add_summary(summ, global_step_val)
+        else:
+            _, _, loss_val = sess.run([train_op, update_metrics, loss])
         t.set_postfix(loss='{:05.3f}'.format(loss_val))
-    sys.stdout.flush()
 
-    tensors = {k: v[0] for k, v in metrics.items()}
+    metrics_values = {k: v[0] for k, v in eval_metrics.items()}
 
-    metrics_val = sess.run(tensors)
+    metrics_val = sess.run(metrics_values)
+    #sys.stdout.flush()
     metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items())
     logging.info("- Train metrics: " + metrics_string)
 
@@ -60,7 +69,12 @@ def train_and_evaluate(model_spec, model_dir, params):
     saver = tf.train.Saver()
     best_saver = tf.train.Saver(max_to_keep=1)  # only keep 1 best checkpoint
 
+
     with tf.Session() as sess:
+        train_writer = tf.summary.FileWriter(model_dir, sess.graph)
+        eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval'), sess.graph)
+
+        # Initialize variables
         sess.run(model_spec['variable_init_op'])
 
         best_eval_acc = 0.0
@@ -72,7 +86,7 @@ def train_and_evaluate(model_spec, model_dir, params):
             sess.run(model_spec['local_metrics_init_op'])
 
             num_steps = (params.train_size + 1) // params.batch_size
-            train(sess, model_spec, num_steps)
+            train(sess, train_writer, model_spec, params, num_steps)
 
             # Save weights
             save_path = os.path.join(model_dir, 'weights', 'after-epoch')
@@ -84,7 +98,7 @@ def train_and_evaluate(model_spec, model_dir, params):
 
             # Evaluate for one epoch on validation set
             num_steps = (params.eval_size + 1) // params.batch_size
-            metrics = evaluate(sess, model_spec, num_steps)
+            metrics = evaluate(sess, eval_writer, model_spec, num_steps)
 
             # If best_eval, best_save_path
             eval_acc = metrics['accuracy']
@@ -93,7 +107,7 @@ def train_and_evaluate(model_spec, model_dir, params):
                 # Save weights
                 best_save_path = os.path.join(model_dir, 'weights', 'best-eval-acc')
                 best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
-                tf.logging.info("Found new best accuracy, saving in {}".format(best_save_path))
+                logging.info("Found new best accuracy, saving in {}".format(best_save_path))
 
 
 if __name__ == '__main__':
