@@ -23,11 +23,13 @@ def model(inputs, mode, params):
         h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
         logits = tf.layers.dense(h1, 10)
     elif params.model_version == '2_conv_1_fc':
-        # TODO: reshape
-        h1 = tf.layers.conv2d(images, 32, 5, padding='valid', activation=tf.nn.relu)
-        h2 = tf.layers.conv2d(h1, 64, 5, padding='valid', activation=tf.nn.relu)
-        # TODO: reshape
-        logits = tf.layers.dense(h2, 10)
+        out = tf.reshape(images, [-1, 28, 28, 1])
+        out = tf.layers.conv2d(out, 32, 5, padding='same', activation=tf.nn.relu)
+        out = tf.layers.max_pooling2d(out, 2, 2)
+        out = tf.layers.conv2d(out, 64, 5, padding='same', activation=tf.nn.relu)
+        out = tf.layers.max_pooling2d(out, 2, 2)
+        out = tf.reshape(out, [-1, 7 * 7 * 64])
+        logits = tf.layers.dense(out, 10)
     else:
         raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 

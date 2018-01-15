@@ -1,9 +1,9 @@
 {
     "learning_rate": 1e-3,
     "batch_size": 32,
-    "num_epochs": 1,
+    "num_epochs": 10,
 
-    "model_version": "2_fc",
+    "model_version": "2_conv_1_fc",
 
     "save_summary_steps": 100
 }
