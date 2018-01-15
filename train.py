@@ -111,6 +111,8 @@ def train_and_evaluate(model_spec, model_dir, params):
 
 
 if __name__ == '__main__':
+    tf.set_random_seed(230)
+
     # Load the parameters
     args = parser.parse_args()
     json_path = os.path.join(args.model_dir, 'params.json')

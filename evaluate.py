@@ -52,6 +52,8 @@ def evaluate(sess, writer, model_spec, num_steps):
 
 
 if __name__ == '__main__':
+    tf.set_random_seed(230)
+
     # TODO: use case where we just evaluate one model_dir
     # Load the parameters
     args = parser.parse_args()
