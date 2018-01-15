@@ -31,10 +31,7 @@ def model(inputs, mode, params):
     else:
         raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 
-    # Evaluation metrics
-    correct_prediction = tf.equal(tf.argmax(logits, 1), labels)
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
+    # Define loss and train_op
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
     optimizer = tf.train.GradientDescentOptimizer(params.learning_rate)
@@ -44,12 +41,23 @@ def model(inputs, mode, params):
     # Create initialization operations
     variable_init_op = tf.global_variables_initializer()
 
+    # Metrics for training and evaluation
+    with tf.variable_scope("metrics"):
+        metrics = {
+            'accuracy': tf.metrics.accuracy(labels=labels, predictions=tf.argmax(logits, 1)),
+            'loss': tf.metrics.mean(loss)
+        }
+
     # Create the model specification and return it
     model_spec = inputs
-    model_spec['accuracy'] = accuracy
     model_spec['loss'] = loss
     model_spec['train_op'] = train_op
     model_spec['variable_init_op'] = variable_init_op
+    local_metric_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metrics")
+    model_spec['local_metrics_init_op'] = tf.variables_initializer(local_metric_variables)
+    model_spec['metrics'] = metrics
+    update_metrics = [op for _, op in metrics.values()]
+    model_spec['update_metrics'] = tf.group(*update_metrics)
 
     # TODO: for eval, we need to return eval_ops
     return model_spec

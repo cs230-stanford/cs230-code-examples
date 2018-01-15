@@ -10,18 +10,18 @@ import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from tqdm import trange
 
-from input_data import input_fn
+from input_data import create_dataset
+from input_data import get_iterator_from_dataset
 from model.utils import Params
 from model.utils import set_logger
 from model.model import model
-from evaluate import evaluate
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def evaluate(model_spec, model_dir, params, num_steps):
+def evaluate(sess, model_spec, model_dir, params, num_steps):
     """Train the model on `num_steps` batches
 
     Args:
@@ -30,13 +30,20 @@ def evaluate(model_spec, model_dir, params, num_steps):
         params: (Params) contains hyperparameters of the model
         num_steps: (int) train for this number of batches
     """
-    sess.run(model_spec['iterator_init_op'])
+    loss = model_spec['loss']
+    update_metrics = model_spec['update_metrics']
+    metrics = model_spec['metrics']
 
-        t = trange(num_steps)
-        for i in t:
-            _, loss_val, accuracy_val = sess.run([train_op, loss, accuracy])
-            t.set_postfix(loss='{:05.3f}'.format(loss_val),
-                          accuracy='{:06.2f}'.format(accuracy_val * 100))
+    for i in range(num_steps):
+        sess.run(update_metrics)
+
+    tensors = {k: v[0] for k, v in metrics.items()}
+
+    metrics_val = sess.run(tensors)
+    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items())
+    logging.info("- Eval metrics: " + metrics_string)
+
+    return metrics_val
 
 
 if __name__ == '__main__':
@@ -54,7 +61,8 @@ if __name__ == '__main__':
     mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
     test_images = mnist.test.images
     test_labels = mnist.test.labels.astype(np.int64)
-    inputs = input_fn(False, test_images, test_labels, params)
+    test_dataset = create_dataset(False, test_images, test_labels, params)
+    inputs = get_iterator_from_dataset(test_dataset)
 
     # Define the model
     logging.info("Creating the model...")
