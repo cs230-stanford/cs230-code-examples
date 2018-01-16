@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--parent_dir', default='experiments/test')
 
 
-def launch_training_job(model_dir, params):
+def launch_training_job(parent_dir, job_name, params):
     """
     Launch training of the model with a set of hyperparameters in parent_dir/job_name
 
@@ -23,6 +23,15 @@ def launch_training_job(model_dir, params):
         model_dir: (string) directory containing config, weights and log
         params: (dict) containing hyperparameters
     """
+    # create a new folder in parent_dir with unique_name "job_name"
+    model_dir = os.path.join(parent_dir, job_name)
+    if not os.path.exists(model_dir): 
+        os.makedirs(model_dir)
+
+    # write parameters in json file
+    json_path = os.path.join(model_dir, 'params.json')
+    params.save(json_path)
+
 
     # launch training with this config
     cmd = "{python} train.py --model_dir={model_dir}".format(python=PYTHON, model_dir=model_dir)
@@ -44,15 +53,6 @@ if __name__ == "__main__":
         # modify the relevant parameter in params
         params.learning_rate = learning_rate
 
-        # create a new folder in parent_dir with unique_name "job_name"
+        # launch job (name has to be unique)
         job_name = "learning_rate_{}".format(learning_rate)
-        model_dir = os.path.join(args.parent_dir, job_name)
-        if not os.path.exists(model_dir): 
-            os.makedirs(model_dir)
-
-        # write parameters in json file
-        json_path = os.path.join(model_dir, 'params.json')
-        params.save(json_path)
-
-        # launch training in the new folder
-        launch_training_job(model_dir, params)
+        launch_training_job(args.parent_dir, job_name, params)
