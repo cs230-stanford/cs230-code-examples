@@ -44,7 +44,7 @@ def synthesize_metrics(parent_dir, save_file):
     """Synthesize the metrics of all experiments in folder `parent_dir`.
 
     Assumes that `parent_dir` contains multiple experiments, with their results stored in
-    `parent_dir/subdir/eval_metrics.json`
+    `parent_dir/subdir/metrics_dev.json`
 
     Args:
         parent_dir:
@@ -56,7 +56,7 @@ def synthesize_metrics(parent_dir, save_file):
         if not os.path.isdir(os.path.join(parent_dir, subdir)):
             continue
         # Get the metrics for this experiment
-        metrics_file = os.path.join(parent_dir, subdir, 'eval_metrics.json')
+        metrics_file = os.path.join(parent_dir, subdir, 'metrics_dev.json')
         if os.path.isfile(metrics_file):
             with open(metrics_file, 'r') as f:
                 metrics[subdir] = json.load(f)
@@ -86,14 +86,18 @@ if __name__ == "__main__":
     params = Params(json_path)
 
     # perform hypersearch over one parameter
-    learning_rates = [1e-1, 3e-1, 1.0]
+    #learning_rates = [1e-1, 3e-1, 1.0]
+    dropouts = [0.1, 0.2, 0.3, 0.4]
 
-    for learning_rate in learning_rates:
+    #for learning_rate in learning_rates:
+    for dropout in dropouts:
         # modify the relevant parameter in params
-        params.learning_rate = learning_rate
+        #params.learning_rate = learning_rate
+        params.dropout_rate = dropout
 
         # launch job (name has to be unique)
-        job_name = "learning_rate_{}".format(learning_rate)
+        #job_name = "learning_rate_{}".format(learning_rate)
+        job_name = "dropout_{}".format(dropout)
         launch_training_job(args.parent_dir, job_name, params)
 
     # Synthesize metrics into parent_dir/results.md

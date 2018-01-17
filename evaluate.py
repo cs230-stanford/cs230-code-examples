@@ -9,11 +9,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-from input_data import create_dataset
-from input_data import get_iterator_from_dataset
+from input_data import input_fn
 from model.utils import Params
 from model.utils import set_logger
-from model.model import model
+from model.model import model_fn
 
 
 parser = argparse.ArgumentParser()
@@ -34,7 +33,7 @@ def evaluate(sess, model_spec, num_steps, writer=None):
     global_step = tf.train.get_global_step()
 
     # Load the evaluation dataset into the pipeline and initialize the metrics init op
-    sess.run(model_spec['eval_init_op'])
+    sess.run(model_spec['iterator_init_op'])
     sess.run(model_spec['local_metrics_init_op'])
 
 
@@ -75,12 +74,11 @@ if __name__ == '__main__':
     mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
     test_images = mnist.test.images
     test_labels = mnist.test.labels.astype(np.int64)
-    test_dataset = create_dataset(False, test_images, test_labels, params)
-    inputs = get_iterator_from_dataset(test_dataset)
+    inputs = input_fn(False, test_images, test_labels, params)
 
     # Define the model
     logging.info("Creating the model...")
-    model_spec = model(inputs, 'eval', params)
+    model_spec = model_fn(False, inputs, params, reuse=False)
 
     # TODO: add summaries + tensorboard
     # TODO: add saving and loading in model_dir
@@ -97,7 +95,10 @@ if __name__ == '__main__':
 
         # Evaluate
         num_steps = (params.test_size + 1) // params.batch_size
-        metrics = evaluate(sess, model_spec, num_steps, None)
+        evaluate(sess, model_spec, num_steps, None)
 
-        for key in metrics:
-            tf.logging.info("{}: {:05.3f}".format(key, metrics[key]))
+    # Save the test metrics in a json file in the model directory
+    with open(os.path.join(model_dir, "metrics_test.json"), 'w') as f:
+        # We need to convert the values to float for json (it doesn't accept np.array)
+        metrics = {k: float(v) for k, v in metrics.items()}
+        json.dump(metrics, f, indent=4)

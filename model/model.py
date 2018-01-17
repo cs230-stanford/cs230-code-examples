@@ -4,15 +4,15 @@
 import tensorflow as tf
 
 
-# TODO: instead of using mode, add a parameter "is_training"
-def model(inputs, mode, params):
+def model_fn(is_training, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
     Args:
+        is_training: (bool) whether we are training or not
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
-        mode: (string) can be one of 'train', 'eval' and 'predict'
         params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
+        reuse: (bool) whether to reuse the weights
 
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
@@ -22,19 +22,23 @@ def model(inputs, mode, params):
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
-    if params.model_version == '2_fc':
-        h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
-        logits = tf.layers.dense(h1, 10)
-    elif params.model_version == '2_conv_1_fc':
-        out = tf.reshape(images, [-1, 28, 28, 1])
-        out = tf.layers.conv2d(out, 32, 5, padding='same', activation=tf.nn.relu)
-        out = tf.layers.max_pooling2d(out, 2, 2)
-        out = tf.layers.conv2d(out, 64, 5, padding='same', activation=tf.nn.relu)
-        out = tf.layers.max_pooling2d(out, 2, 2)
-        out = tf.reshape(out, [-1, 7 * 7 * 64])
-        logits = tf.layers.dense(out, 10)
-    else:
-        raise NotImplementedError("Unknown model version: {}".format(params.model_version))
+    with tf.variable_scope('model', reuse=reuse):
+        if params.model_version == '2_fc':
+            h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
+            h1 = tf.layers.dropout(h1, rate=params.dropout_rate, training=is_training)
+            logits = tf.layers.dense(h1, 10)
+        elif params.model_version == '2_conv_1_fc':
+            out = tf.reshape(images, [-1, 28, 28, 1])
+            out = tf.layers.conv2d(out, 32, 5, padding='same', activation=tf.nn.relu)
+            out = tf.layers.max_pooling2d(out, 2, 2)
+            out = tf.layers.conv2d(out, 64, 5, padding='same', activation=tf.nn.relu)
+            out = tf.layers.max_pooling2d(out, 2, 2)
+            out = tf.reshape(out, [-1, 7 * 7 * 64])
+            out = tf.layers.dense(out, 128)
+            out = tf.layers.dropout(out, rate=params.dropout_rate, training=is_training)
+            logits = tf.layers.dense(out, 10)
+        else:
+            raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 
     # Define training metrics
     predictions = tf.argmax(logits, 1)
@@ -44,7 +48,7 @@ def model(inputs, mode, params):
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
     optimizer = tf.train.GradientDescentOptimizer(params.learning_rate)
-    global_step = tf.train.create_global_step()
+    global_step = tf.train.get_or_create_global_step()
     train_op = optimizer.minimize(loss, global_step=global_step)
 
     # -----------------------------------------------------------

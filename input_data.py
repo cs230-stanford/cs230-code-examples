@@ -4,7 +4,7 @@
 import tensorflow as tf
 
 
-def create_dataset(is_training, images, labels, params):
+def input_fn(is_training, images, labels, params):
     """Input function for MNIST.
 
     Args:
@@ -24,36 +24,17 @@ def create_dataset(is_training, images, labels, params):
         buffer_size = 1  # no shuffling
 
     # Create a Dataset serving batches of images and labels
+    # We don't repeat for multiple epochs because we always train and evaluate for one epoch
     dataset = (tf.data.Dataset.from_tensor_slices((images, labels))
         .shuffle(buffer_size=buffer_size)
         .batch(params.batch_size)
         .prefetch(1)  # make sure you always have one batch ready to serve
     )
 
-    return dataset
-
-
-def get_iterator_from_dataset(dataset):
-    """Create a one shot iterator from a dataset.
-    """
-    iterator = dataset.make_one_shot_iterator()
+    # Create reinitializable iterator from dataset
+    iterator = dataset.make_initializable_iterator()
     images, labels = iterator.get_next()
+    init_op = iterator.initializer
 
-    inputs = {'images': images, 'labels': labels}
-    return inputs
-
-
-def get_iterator_from_datasets(train_dataset, eval_dataset):
-    """Create a reinitializable iterator from multiple datasets.
-    """
-    iterator = tf.data.Iterator.from_structure(train_dataset.output_types,
-                                               train_dataset.output_shapes)
-    images, labels = iterator.get_next()
-
-    train_init_op = iterator.make_initializer(train_dataset)
-    eval_init_op = iterator.make_initializer(eval_dataset)
-
-    inputs = {'images': images, 'labels': labels,
-              'train_init_op': train_init_op, 'eval_init_op': eval_init_op}
-
+    inputs = {'images': images, 'labels': labels, 'iterator_init_op': init_op}
     return inputs
