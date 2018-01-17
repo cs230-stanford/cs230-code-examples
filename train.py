@@ -24,15 +24,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def train(sess, writer, model_spec, params, num_steps):
+def train(sess, model_spec, params, num_steps, writer):
     """Train the model on `num_steps` batches
 
     Args:
         sess: (tf.Session) current session
-        writer: (tf.summary.FileWriter) writer for summaries
         model_spec: (dict) contains the graph operations or nodes needed for training
         params: (Params) hyperparameters
         num_steps: (int) train for this number of batches
+        writer: (tf.summary.FileWriter) writer for summaries
     """
     loss = model_spec['loss']
     train_op = model_spec['train_op']
@@ -40,6 +40,10 @@ def train(sess, writer, model_spec, params, num_steps):
     eval_metrics = model_spec['eval_metrics']
     summary_op = model_spec['summary_op']
     global_step = tf.train.get_global_step()
+
+    # Load the training dataset into the pipeline and initialize the metrics local variables
+    sess.run(model_spec['train_init_op'])
+    sess.run(model_spec['local_metrics_init_op'])
 
     t = trange(num_steps)
     for i in t:
@@ -82,31 +86,23 @@ def train_and_evaluate(model_spec, model_dir, params):
         for epoch in range(params.num_epochs):
             logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
 
-            # Load the training dataset into the pipeline
-            sess.run(model_spec['train_init_op'])
-            sess.run(model_spec['local_metrics_init_op'])
-
             num_steps = (params.train_size + 1) // params.batch_size
-            train(sess, train_writer, model_spec, params, num_steps)
+            train(sess, model_spec, params, num_steps, train_writer)
 
             # Save weights
-            save_path = os.path.join(model_dir, 'weights', 'after-epoch')
+            save_path = os.path.join(model_dir, 'latest_weights', 'after-epoch')
             save_path = saver.save(sess, save_path, global_step=epoch + 1)
-
-            # Load the training dataset into the pipeline
-            sess.run(model_spec['eval_init_op'])
-            sess.run(model_spec['local_metrics_init_op'])
 
             # Evaluate for one epoch on validation set
             num_steps = (params.eval_size + 1) // params.batch_size
-            metrics = evaluate(sess, eval_writer, model_spec, num_steps)
+            metrics = evaluate(sess, model_spec, num_steps, eval_writer)
 
             # If best_eval, best_save_path
             eval_acc = metrics['accuracy']
             if eval_acc >= best_eval_acc:
                 best_eval_acc = eval_acc
                 # Save weights
-                best_save_path = os.path.join(model_dir, 'weights', 'best-eval-acc')
+                best_save_path = os.path.join(model_dir, 'best_weights', 'after-epoch')
                 best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
                 logging.info("Found new best accuracy, saving in {}".format(best_save_path))
 

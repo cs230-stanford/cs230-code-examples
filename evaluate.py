@@ -20,18 +20,23 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
 
 
-def evaluate(sess, writer, model_spec, num_steps):
-    """Train the model on `num_steps` batches
+def evaluate(sess, model_spec, num_steps, writer=None):
+    """Train the model on `num_steps` batches.
 
     Args:
         sess: (tf.Session) current session
-        writer: (tf.summary.FileWriter) writer for summaries
         model_spec: (dict) contains the graph operations or nodes needed for training
         num_steps: (int) train for this number of batches
+        writer: (tf.summary.FileWriter) writer for summaries. Is None if we don't log anything
     """
     update_metrics = model_spec['update_metrics']
     eval_metrics = model_spec['eval_metrics']
     global_step = tf.train.get_global_step()
+
+    # Load the evaluation dataset into the pipeline and initialize the metrics init op
+    sess.run(model_spec['eval_init_op'])
+    sess.run(model_spec['local_metrics_init_op'])
+
 
     for _ in range(num_steps):
         sess.run(update_metrics)
@@ -43,10 +48,11 @@ def evaluate(sess, writer, model_spec, num_steps):
     logging.info("- Eval metrics: " + metrics_string)
 
     # Add summaries manually to writer at global_step_val
-    global_step_val = sess.run(global_step)
-    for tag, val in metrics_val.items():
-        summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
-        writer.add_summary(summ, global_step_val)
+    if writer is not None:
+        global_step_val = sess.run(global_step)
+        for tag, val in metrics_val.items():
+            summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
+            writer.add_summary(summ, global_step_val)
 
     return metrics_val
 
@@ -85,13 +91,13 @@ if __name__ == '__main__':
 
     saver = tf.train.Saver()
     with tf.Session() as sess:
-        # Reload weights
-        save_path = os.path.join(model_dir, 'best')  # TODO: get correct path
+        # Reload weights from the 'best_weights' subdirectory
+        save_path = tf.train.latest_checkpoint(os.path.join(args.model_dir, 'best_weights'))
         saver.restore(sess, save_path)
 
         # Evaluate
         num_steps = (params.test_size + 1) // params.batch_size
-        metrics = evaluate(sess, model_spec, num_steps)
+        metrics = evaluate(sess, model_spec, num_steps, None)
 
         for key in metrics:
-            tf.logging.info("{}: {}".format(key, metrics[key]))
+            tf.logging.info("{}: {:05.3f}".format(key, metrics[key]))

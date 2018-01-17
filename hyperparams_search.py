@@ -86,7 +86,7 @@ if __name__ == "__main__":
     params = Params(json_path)
 
     # perform hypersearch over one parameter
-    learning_rates = [1e-1, 3e-2, 1e-2]
+    learning_rates = [1e-1, 3e-1, 1.0]
 
     for learning_rate in learning_rates:
         # modify the relevant parameter in params
