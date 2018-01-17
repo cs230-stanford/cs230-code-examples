@@ -8,7 +8,7 @@ import logging
 class Params():
     """Class that loads hyperparameters from a json file.
 
-    Example usage:
+    Example:
     ```
     params = Params(json_path)
     print(params.learning_rate)
@@ -22,12 +22,20 @@ class Params():
             self.__dict__.update(params)
 
     def save(self, json_path):
-        with open(json_path, "w") as f:
+        with open(json_path, 'w') as f:
             json.dump(self.__dict__, f, indent=4)
 
 
 def set_logger(log_path):
-    """Set the logger to log info in terminal and file `log_path`
+    """Set the logger to log info in terminal and file `log_path`.
+
+    In general, it is useful to have a logger so that every output to the terminal is saved
+    in a permanent file. Here we save it to `model_dir/train.log`.
+
+    Example:
+    ```
+    logging.info("Starting training...")
+    ```
 
     Args:
         log_path: (string) where to log

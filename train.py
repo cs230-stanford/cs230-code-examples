@@ -2,6 +2,7 @@
 """
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -109,8 +110,15 @@ def train_and_evaluate(model_spec, model_dir, params):
                 best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
                 logging.info("Found new best accuracy, saving in {}".format(best_save_path))
 
+    # Save the metrics in a json file in the model directory
+    with open(os.path.join(model_dir, "eval_metrics.json"), 'w') as f:
+        # We need to convert the values to float for json (it doesn't accept np.array)
+        metrics = {k: float(v) for k, v in metrics.items()}
+        json.dump(metrics, f, indent=4)
+
 
 if __name__ == '__main__':
+    # Set the random seed for the whole graph
     tf.set_random_seed(230)
 
     # Load the parameters
