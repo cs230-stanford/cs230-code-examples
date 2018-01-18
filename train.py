@@ -1,5 +1,4 @@
-"""Train the model
-"""
+"""Train the model"""
 
 import argparse
 import json
@@ -46,9 +45,10 @@ def train(sess, model_spec, params, num_steps, writer):
     sess.run(model_spec['iterator_init_op'])
     sess.run(model_spec['metrics_init_op'])
 
-    t = trange(num_steps) # use tqdm for progress bar
+    # Use tqdm for progress bar
+    t = trange(num_steps) 
     for i in t:
-        # evaluate summaries for tensorboard only once in a while
+        # Evaluate summaries for tensorboard only once in a while
         if i % params.save_summary_steps == 0:
             # Perform a mini-batch update
             _, _, loss_val, summ, global_step_val = sess.run([train_op, update_metrics, loss,
@@ -57,7 +57,7 @@ def train(sess, model_spec, params, num_steps, writer):
             writer.add_summary(summ, global_step_val)
         else:
             _, _, loss_val = sess.run([train_op, update_metrics, loss])
-        # log the loss in the tqdm progress bar
+        # Log the loss in the tqdm progress bar
         t.set_postfix(loss='{:05.3f}'.format(loss_val))
 
 
@@ -84,27 +84,28 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
     with tf.Session() as sess:
         # reload weights from directory if specified
         if restore_dir is not None:
-            logging.info("Restoring weights from {}".format(restore_dir))
+            logging.info("Restoring parameters from {}".format(restore_dir))
             save_path = tf.train.latest_checkpoint(restore_dir)
             last_saver.restore(sess, save_path)
 
-        # For tensorboard (takes care of writing summaries of metrics to files)
-        train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train'), sess.graph)
-        eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval'), sess.graph)
+        # For tensorboard (takes care of writing summaries to files)
+        train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train_summaries'), sess.graph)
+        eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval_summaries'), sess.graph)
 
         # Initialize model variables
         sess.run(train_model_spec['variable_init_op'])
 
         best_eval_acc = 0.0
         for epoch in range(params.num_epochs):
+            # Run one epoch
             logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
-
+            # compute number of batches in one epoch (one full pass over the training set)
             num_steps = (params.train_size + 1) // params.batch_size
             train(sess, train_model_spec, params, num_steps, train_writer)
 
             # Save weights
-            save_path = os.path.join(model_dir, 'latest_weights', 'after-epoch')
-            save_path = last_saver.save(sess, save_path, global_step=epoch + 1)
+            last_save_path = os.path.join(model_dir, 'last_weights', 'after-epoch')
+            last_saver.save(sess, last_save_path, global_step=epoch + 1)
 
             # Evaluate for one epoch on validation set
             num_steps = (params.eval_size + 1) // params.batch_size
@@ -113,16 +114,19 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
             # If best_eval, best_save_path
             eval_acc = metrics['accuracy']
             if eval_acc >= best_eval_acc:
+                # Store new best accuracy
                 best_eval_acc = eval_acc
                 # Save weights
                 best_save_path = os.path.join(model_dir, 'best_weights', 'after-epoch')
                 best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
                 logging.info("- Found new best accuracy, saving in {}".format(best_save_path))
                 # Save best eval metrics in a json file in the model directory
-                save_dict_to_json(metrics, os.path.join(model_dir, "metrics_eval_best.json"))
+                best_json_path = os.path.join(model_dir, "metrics_eval_best_weights.json")
+                save_dict_to_json(metrics, best_json_path)
 
             # Save latest eval metrics in a json file in the model directory
-            save_dict_to_json(metrics, os.path.join(model_dir, "metrics_eval_latest.json"))
+            last_json_path = os.path.join(model_dir, "metrics_eval_last_weights.json")
+            save_dict_to_json(metrics, last_json_path)
 
 
 if __name__ == '__main__':

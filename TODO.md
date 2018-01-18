@@ -6,14 +6,11 @@
 
 - move summaries into folders
 
-- what is it about that big .gitignore ?
-
 - enable hyperparameter search
   - `hyperparam_search.py` calling `train.py` over multiple `params.json` in `experiments`
   - `run("train.py --model_dir experiments/exp024")`
   - check that there is no problem with the virtual env and that we don't need to add a preamble
   
-
 - saving
   - if we train again the model, training should start where it stopped
     - add an optional argument for this?

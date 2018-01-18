@@ -1,5 +1,4 @@
-"""Utility functions for creating the model
-"""
+"""Utility functions for creating the model"""
 
 import json
 import logging

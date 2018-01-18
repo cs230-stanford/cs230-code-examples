@@ -1,5 +1,4 @@
-"""Train the model
-"""
+"""Train the model"""
 
 import argparse
 import json
@@ -19,6 +18,7 @@ from model.model import model_fn
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
+parser.add_argument('--restore_dir', default='best_weights') # subdir of model_dir with weights
 
 
 def evaluate(sess, model_spec, num_steps, writer=None):
@@ -95,11 +95,12 @@ if __name__ == '__main__':
 
     with tf.Session() as sess:
         # Reload weights from the weights_dir subdirectory
-        save_dir = os.path.join(args.model_dir, "best_weights")
+        save_dir = os.path.join(args.model_dir, args.restore_dir)
         save_path = tf.train.latest_checkpoint(save_dir)
         saver.restore(sess, save_path)
 
         # Evaluate
         num_steps = (params.test_size + 1) // params.batch_size
         metrics = evaluate(sess, model_spec, num_steps, None)
-        save_dict_to_json(metrics, os.path.join(args.model_dir, "metrics_test_best.json"))
+        save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_dir))
+        save_dict_to_json(metrics, save_path)
