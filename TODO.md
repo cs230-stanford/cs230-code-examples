@@ -4,6 +4,10 @@
   - introduces confusion: only have one set of metrics that are said to be an average on the dataset
   - what we log with tqdm is not metrics but "training monitoring"
 
+- move summaries into folders
+
+- what is it about that big .gitignore ?
+
 - enable hyperparameter search
   - `hyperparam_search.py` calling `train.py` over multiple `params.json` in `experiments`
   - `run("train.py --model_dir experiments/exp024")`

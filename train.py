@@ -21,6 +21,7 @@ from evaluate import evaluate
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test')
+parser.add_argument('--restore_dir', default=None)
 
 
 def train(sess, model_spec, params, num_steps, writer):
@@ -66,7 +67,7 @@ def train(sess, model_spec, params, num_steps, writer):
     logging.info("- Train metrics: " + metrics_string)
 
 
-def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params):
+def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, restore_dir=None):
     """Train the model and evaluate every epoch.
 
     Args:
@@ -81,6 +82,12 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params):
     best_saver = tf.train.Saver(max_to_keep=1)  # only keep 1 best checkpoint (best on eval)
 
     with tf.Session() as sess:
+        # reload weights from directory if specified
+        if restore_dir is not None:
+            logging.info("Restoring weights from {}".format(restore_dir))
+            save_path = tf.train.latest_checkpoint(restore_dir)
+            last_saver.restore(sess, save_path)
+
         # For tensorboard (takes care of writing summaries of metrics to files)
         train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train'), sess.graph)
         eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval'), sess.graph)
@@ -156,4 +163,4 @@ if __name__ == '__main__':
 
     # Train the model
     logging.info("Starting training for {} epoch(s)".format(params.num_epochs))
-    train_and_evaluate(train_model_spec, eval_model_spec, args.model_dir, params)
+    train_and_evaluate(train_model_spec, eval_model_spec, args.model_dir, params, args.restore_dir)
