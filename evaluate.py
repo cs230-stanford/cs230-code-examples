@@ -2,6 +2,7 @@
 """
 
 import argparse
+import json
 import logging
 import os
 
@@ -12,6 +13,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 from input_data import input_fn
 from model.utils import Params
 from model.utils import set_logger
+from model.utils import save_dict_to_json
 from model.model import model_fn
 
 
@@ -29,14 +31,14 @@ def evaluate(sess, model_spec, num_steps, writer=None):
         writer: (tf.summary.FileWriter) writer for summaries. Is None if we don't log anything
     """
     update_metrics = model_spec['update_metrics']
-    eval_metrics = model_spec['eval_metrics']
+    eval_metrics = model_spec['metrics']
     global_step = tf.train.get_global_step()
 
     # Load the evaluation dataset into the pipeline and initialize the metrics init op
     sess.run(model_spec['iterator_init_op'])
-    sess.run(model_spec['local_metrics_init_op'])
+    sess.run(model_spec['metrics_init_op'])
 
-
+    # compute metrics over the dataset
     for _ in range(num_steps):
         sess.run(update_metrics)
 
@@ -71,34 +73,33 @@ if __name__ == '__main__':
     set_logger(os.path.join(args.model_dir, 'evaluate.log'))
 
     # Create the input data pipeline
+    logging.info("Creating the dataset...")
     mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
     test_images = mnist.test.images
     test_labels = mnist.test.labels.astype(np.int64)
+
+    # specify the test set size
+    params.test_size = test_images.shape[0]
+
+    # create the iterator over the dataset
     inputs = input_fn(False, test_images, test_labels, params)
+    logging.info("- done.")
 
     # Define the model
     logging.info("Creating the model...")
     model_spec = model_fn(False, inputs, params, reuse=False)
-
-    # TODO: add summaries + tensorboard
-    # TODO: add saving and loading in model_dir
-    # Test the model
-    params.test_size = test_images.shape[0]
-
+    logging.info("- done.")
+    
     logging.info("Starting evaluation")
-
     saver = tf.train.Saver()
+
     with tf.Session() as sess:
-        # Reload weights from the 'best_weights' subdirectory
-        save_path = tf.train.latest_checkpoint(os.path.join(args.model_dir, 'best_weights'))
+        # Reload weights from the weights_dir subdirectory
+        save_dir = os.path.join(args.model_dir, "best_weights")
+        save_path = tf.train.latest_checkpoint(save_dir)
         saver.restore(sess, save_path)
 
         # Evaluate
         num_steps = (params.test_size + 1) // params.batch_size
-        evaluate(sess, model_spec, num_steps, None)
-
-    # Save the test metrics in a json file in the model directory
-    with open(os.path.join(model_dir, "metrics_test.json"), 'w') as f:
-        # We need to convert the values to float for json (it doesn't accept np.array)
-        metrics = {k: float(v) for k, v in metrics.items()}
-        json.dump(metrics, f, indent=4)
+        metrics = evaluate(sess, model_spec, num_steps, None)
+        save_dict_to_json(metrics, os.path.join(args.model_dir, "metrics_test_best.json"))

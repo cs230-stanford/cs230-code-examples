@@ -14,7 +14,7 @@ from model.utils import Params
 
 PYTHON = "python3"
 parser = argparse.ArgumentParser()
-parser.add_argument('--parent_dir', default='experiments/test')
+parser.add_argument('--parent_dir', default='experiments/learning_rate')
 
 
 def launch_training_job(parent_dir, job_name, params):
@@ -33,7 +33,6 @@ def launch_training_job(parent_dir, job_name, params):
     json_path = os.path.join(model_dir, 'params.json')
     params.save(json_path)
 
-
     # Launch training with this config
     cmd = "{python} train.py --model_dir={model_dir}".format(python=PYTHON, model_dir=model_dir)
     print(cmd)
@@ -49,14 +48,14 @@ def synthesize_metrics(parent_dir, save_file):
     Args:
         parent_dir:
     """
-    metrics = {}
+    metrics = dict()
 
     # Check every subdirectory of parent_dir
     for subdir in os.listdir(parent_dir):
         if not os.path.isdir(os.path.join(parent_dir, subdir)):
             continue
         # Get the metrics for this experiment
-        metrics_file = os.path.join(parent_dir, subdir, 'metrics_dev.json')
+        metrics_file = os.path.join(parent_dir, subdir, 'metrics_eval_best.json')
         if os.path.isfile(metrics_file):
             with open(metrics_file, 'r') as f:
                 metrics[subdir] = json.load(f)
@@ -86,18 +85,14 @@ if __name__ == "__main__":
     params = Params(json_path)
 
     # perform hypersearch over one parameter
-    #learning_rates = [1e-1, 3e-1, 1.0]
-    dropouts = [0.1, 0.2, 0.3, 0.4]
+    learning_rates = [1e-4, 1e-3, 1e-2]
 
-    #for learning_rate in learning_rates:
-    for dropout in dropouts:
+    for learning_rate in learning_rates:
         # modify the relevant parameter in params
-        #params.learning_rate = learning_rate
-        params.dropout_rate = dropout
+        params.learning_rate = learning_rate
 
         # launch job (name has to be unique)
-        #job_name = "learning_rate_{}".format(learning_rate)
-        job_name = "dropout_{}".format(dropout)
+        job_name = "learning_rate_{}".format(learning_rate)
         launch_training_job(args.parent_dir, job_name, params)
 
     # Synthesize metrics into parent_dir/results.md

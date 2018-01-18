@@ -1,5 +1,8 @@
 # TODO
 
+- change name `eval_metrics` to `metrics`
+  - introduces confusion: only have one set of metrics that are said to be an average on the dataset
+  - what we log with tqdm is not metrics but "training monitoring"
 
 - enable hyperparameter search
   - `hyperparam_search.py` calling `train.py` over multiple `params.json` in `experiments`
