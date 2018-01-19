@@ -10,6 +10,7 @@ import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 from input_data import input_fn
+from input_data import load_dataset_from_text
 from model.utils import Params
 from model.utils import set_logger
 from model.utils import save_dict_to_json
@@ -69,31 +70,43 @@ if __name__ == '__main__':
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
-    # Get the logger
+    # Set the logger
     set_logger(os.path.join(args.model_dir, 'evaluate.log'))
+
+    # Load Vocabularies
+    path_vocab_words = 'data/NER/words.txt'
+    path_vocab_tags = 'data/NER/tags.txt'
+    vocab_words = tf.contrib.lookup.index_table_from_file(path_vocab_words, num_oov_buckets=1)
+    vocab_tags = tf.contrib.lookup.index_table_from_file(path_vocab_tags)
+    id_pad_word = vocab_words.lookup(tf.constant('<pad>'))
+    id_pad_tag = vocab_tags.lookup(tf.constant('O'))
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
-    test_images = mnist.test.images
-    test_labels = mnist.test.labels.astype(np.int64)
+    test_sentences = load_dataset_from_text('data/NER/test/sentences.txt', vocab_words)
+    test_tags = load_dataset_from_text('data/NER/test/tags.txt', vocab_tags)
 
-    # specify the test set size
-    params.test_size = test_images.shape[0]
+    # specify the train and eval datasets size
+    params.update('data/NER/dataset_params.json')
+    params.vocab_size += 1 # to account for unknown words
 
-    # create the iterator over the dataset
-    inputs = input_fn(False, test_images, test_labels, params)
+    # Create iterator over the test set
+    inputs = input_fn(False, test_sentences, test_tags, pad_word=id_pad_word,
+                            pad_tag=id_pad_tag)
     logging.info("- done.")
 
     # Define the model
     logging.info("Creating the model...")
     model_spec = model_fn(False, inputs, params, reuse=False)
     logging.info("- done.")
-    
+
     logging.info("Starting evaluation")
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
+        # Initialize the lookup table
+        sess.run(tf.tables_initializer())
+
         # Reload weights from the weights_dir subdirectory
         save_dir = os.path.join(args.model_dir, args.restore_dir)
         save_path = tf.train.latest_checkpoint(save_dir)

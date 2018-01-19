@@ -15,22 +15,21 @@ def build_model(is_training, inputs, params):
     Returns:
         output: (tf.Tensor) output of the model
     """
-    images = inputs['images']
+    sentence = inputs['sentence']
 
-    if params.model_version == '2_fc':
-        h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
-        h1 = tf.layers.dropout(h1, rate=params.dropout_rate, training=is_training)
-        logits = tf.layers.dense(h1, 10)
-    elif params.model_version == '2_conv_1_fc':
-        out = tf.reshape(images, [-1, 28, 28, 1])
-        out = tf.layers.conv2d(out, 32, 5, padding='same', activation=tf.nn.relu)
-        out = tf.layers.max_pooling2d(out, 2, 2)
-        out = tf.layers.conv2d(out, 64, 5, padding='same', activation=tf.nn.relu)
-        out = tf.layers.max_pooling2d(out, 2, 2)
-        out = tf.reshape(out, [-1, 7 * 7 * 64])
-        out = tf.layers.dense(out, 128)
-        out = tf.layers.dropout(out, rate=params.dropout_rate, training=is_training)
-        logits = tf.layers.dense(out, 10)
+    if params.model_version == 'lstm':
+        # Get word embeddings for each token in the sentence
+        embeddings = tf.get_variable(name="embeddings", dtype=tf.float32,
+                shape=[params.vocab_size, params.embedding_size])
+        sentence = tf.nn.embedding_lookup(embeddings, sentence)
+
+        # Apply LSTM over the embeddings
+        lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(params.lstm_num_units)
+        output, _  = tf.nn.dynamic_rnn(lstm_cell, sentence, dtype=tf.float32)
+
+        # Compute logits from the output of the LSTM
+        logits = tf.layers.dense(output, params.number_of_tags)
+
     else:
         raise NotImplementedError("Unknown model version: {}".format(params.model_version))
 
@@ -50,18 +49,19 @@ def model_fn(is_training, inputs, params, reuse=False):
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
     """
-    labels = inputs['labels']
+    tags = inputs['tags']
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
     with tf.variable_scope('model', reuse=reuse):
         # compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        predictions = tf.argmax(logits, 1)
+        predictions = tf.argmax(logits, -1)
+
 
     # Define loss and accuracy
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
-    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
+    loss = tf.losses.sparse_softmax_cross_entropy(labels=tags, logits=logits)
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(tags, predictions), tf.float32))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -74,7 +74,7 @@ def model_fn(is_training, inputs, params, reuse=False):
     # Metrics for evaluation using tf.metrics (average over whole dataset)
     with tf.variable_scope("metrics"):
         metrics = {
-            'accuracy': tf.metrics.accuracy(labels=labels, predictions=tf.argmax(logits, 1)),
+            'accuracy': tf.metrics.accuracy(labels=tags, predictions=predictions),
             'loss': tf.metrics.mean(loss)
         }
 

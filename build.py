@@ -17,13 +17,13 @@ parser.add_argument('--min_count_word', default=1)
 parser.add_argument('--min_count_tag', default=1)
 
 
-def update_vocabs(inputs, vocab_word, vocab_tag):
+def update_vocabs(inputs, words, tags):
     """Update word and tag vocabulary from dataset
 
     Args:
         inputs: (dict) containing tf.data elements
-        vocab_word: (set or Counter) countaining words
-        vocab_tag: (set or Counter) countaining tags
+        words: (set or Counter) countaining words
+        tags: (set or Counter) countaining tags
 
     Returns:
         dataset_size: (int) number of elements in the dataset
@@ -33,7 +33,7 @@ def update_vocabs(inputs, vocab_word, vocab_tag):
         """Decodes bytes to utf-8"""
         return token.decode('utf-8')
 
-    # Initialize 
+    # Initialize
     with tf.Session() as sess:
         # Initialize the iterator over the datasets
         sess.run(inputs['iterator_init_op'])
@@ -45,8 +45,8 @@ def update_vocabs(inputs, vocab_word, vocab_tag):
                 sentence_eval, tags_eval = sess.run([inputs["sentence"], inputs["tags"]])
 
                 # Update the counter of tokens for words and tags
-                vocab_word.update([enc(w) for sentence in sentence_eval for w in sentence])
-                vocab_tag.update([enc(t) for tags in tags_eval for t in tags])
+                words.update([enc(w) for sentence in sentence_eval for w in sentence])
+                tags.update([enc(t) for tags in tags_eval for t in tags])
 
                 # Update the dataset_size
                 dataset_size += sentence_eval.shape[0]
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Initialize empty counters for tag and word vocab
-    vocab_word, vocab_tag = Counter(), Counter()
+    words, tags = Counter(), Counter()
 
     # Create the input data pipeline
     train_sentences = load_dataset_from_text('data/NER/train/sentences.txt')
@@ -73,22 +73,23 @@ if __name__ == '__main__':
     test_inputs = input_fn(False, test_sentences, test_tags)
 
     # Update vocabularies with train and test datasets
-    train_size = update_vocabs(train_inputs, vocab_word, vocab_tag)
-    test_size = update_vocabs(test_inputs, vocab_word, vocab_tag)
+    train_size = update_vocabs(train_inputs, words, tags)
+    test_size = update_vocabs(test_inputs, words, tags)
 
     # Only keep most frequent tokens
-    vocab_word = [tok for tok, count in vocab_word.items() if count >= args.min_count_word]
-    vocab_tag = [tok for tok, count in vocab_tag.items() if count >= args.min_count_tag]
+    words = [tok for tok, count in words.items() if count >= args.min_count_word]
+    tags = [tok for tok, count in tags.items() if count >= args.min_count_tag]
 
     # Save vocabularies to file
-    save_vocab_to_txt_file(vocab_word, 'data/NER/vocab_words.txt')
-    save_vocab_to_txt_file(vocab_tag, 'data/NER/vocab_tags.txt')
+    save_vocab_to_txt_file(words, 'data/NER/words.txt')
+    save_vocab_to_txt_file(tags, 'data/NER/tags.txt')
 
     # Save datasets sizes in json file
     sizes = {
         "train_size": train_size,
-        "test_size": test_size
+        "test_size": test_size,
+        "vocab_size": len(words),
+        "number_of_tags": len(tags)
     }
-    save_dict_to_json(sizes, 'data/NER/dataset_sizes.json')
+    save_dict_to_json(sizes, 'data/NER/dataset_params.json', int)
 
-        

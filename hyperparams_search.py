@@ -62,8 +62,8 @@ def synthesize_metrics(parent_dir, save_file):
         else:
             print("Couldn't find any metrisc json file at {}".format(metrics_file))
 
-    # Get the headers from the last subdir. Assumes everything has the same metrics
-    headers = metrics[subdir].keys()
+    # Get the headers from the first subdir. Assumes everything has the same metrics
+    headers = metrics[list(metrics.keys())[0]].keys()
     table = [[subdir] + [values[h] for h in headers] for subdir, values in metrics.items()]
     res = tabulate(table, headers, tablefmt='pipe')
 
