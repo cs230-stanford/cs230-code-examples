@@ -1,8 +1,13 @@
 # TODO
 
+- what about inference when we don't know the labels?
+- should we put the paths to vocabs and datasets in params.json
+
 - change name `eval_metrics` to `metrics`
   - introduces confusion: only have one set of metrics that are said to be an average on the dataset
   - what we log with tqdm is not metrics but "training monitoring"
+
+- put paths to datasets into params.json ?
 
 - move summaries into folders
 
