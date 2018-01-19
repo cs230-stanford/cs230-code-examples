@@ -55,7 +55,7 @@ def synthesize_metrics(parent_dir, save_file):
         if not os.path.isdir(os.path.join(parent_dir, subdir)):
             continue
         # Get the metrics for this experiment
-        metrics_file = os.path.join(parent_dir, subdir, 'metrics_eval_best.json')
+        metrics_file = os.path.join(parent_dir, subdir, 'metrics_eval_best_weights.json')
         if os.path.isfile(metrics_file):
             with open(metrics_file, 'r') as f:
                 metrics[subdir] = json.load(f)
