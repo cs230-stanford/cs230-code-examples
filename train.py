@@ -46,7 +46,7 @@ def train(sess, model_spec, params, num_steps, writer):
     sess.run(model_spec['metrics_init_op'])
 
     # Use tqdm for progress bar
-    t = trange(num_steps) 
+    t = trange(num_steps)
     for i in t:
         # Evaluate summaries for tensorboard only once in a while
         if i % params.save_summary_steps == 0:

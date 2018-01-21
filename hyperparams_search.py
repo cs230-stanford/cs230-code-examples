@@ -46,7 +46,8 @@ def synthesize_metrics(parent_dir, save_file):
     `parent_dir/subdir/metrics_dev.json`
 
     Args:
-        parent_dir:
+        parent_dir: parent directory of the different experiments launched
+        save_file: where to save a table of the results (markdown format)
     """
     metrics = dict()
 
@@ -55,15 +56,15 @@ def synthesize_metrics(parent_dir, save_file):
         if not os.path.isdir(os.path.join(parent_dir, subdir)):
             continue
         # Get the metrics for this experiment
-        metrics_file = os.path.join(parent_dir, subdir, 'metrics_eval_best.json')
+        metrics_file = os.path.join(parent_dir, subdir, 'metrics_eval_best_weights.json')
         if os.path.isfile(metrics_file):
             with open(metrics_file, 'r') as f:
                 metrics[subdir] = json.load(f)
         else:
-            print("Couldn't find any metrisc json file at {}".format(metrics_file))
+            print("Couldn't find any metrics json file at {}".format(metrics_file))
 
-    # Get the headers from the last subdir. Assumes everything has the same metrics
-    headers = metrics[subdir].keys()
+    # Get the headers from the first subdir. Assumes everything has the same metrics
+    headers = metrics[list(metrics.keys())[0]].keys()
     table = [[subdir] + [values[h] for h in headers] for subdir, values in metrics.items()]
     res = tabulate(table, headers, tablefmt='pipe')
 
@@ -78,20 +79,20 @@ def synthesize_metrics(parent_dir, save_file):
 
 
 if __name__ == "__main__":
-    # load the "reference" parameters from parent_dir json file
+    # Load the "reference" parameters from parent_dir json file
     args = parser.parse_args()
     json_path = os.path.join(args.parent_dir, 'params.json')
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
-    # perform hypersearch over one parameter
+    # Perform hypersearch over one parameter
     learning_rates = [1e-4, 1e-3, 1e-2]
 
     for learning_rate in learning_rates:
-        # modify the relevant parameter in params
+        # Modify the relevant parameter in params
         params.learning_rate = learning_rate
 
-        # launch job (name has to be unique)
+        # Launch job (name has to be unique)
         job_name = "learning_rate_{}".format(learning_rate)
         launch_training_job(args.parent_dir, job_name, params)
 

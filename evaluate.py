@@ -69,7 +69,7 @@ if __name__ == '__main__':
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
-    # Get the logger
+    # Set the logger
     set_logger(os.path.join(args.model_dir, 'evaluate.log'))
 
     # Create the input data pipeline
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     logging.info("Creating the model...")
     model_spec = model_fn(False, inputs, params, reuse=False)
     logging.info("- done.")
-    
+
     logging.info("Starting evaluation")
     saver = tf.train.Saver()
 

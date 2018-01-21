@@ -1,5 +1,4 @@
-"""Create the input data pipeline using `tf.data`
-"""
+"""Create the input data pipeline using `tf.data`"""
 
 import tensorflow as tf
 
