@@ -1,9 +1,9 @@
 """Train the model"""
 
 import argparse
-import json
 import logging
 import os
+import random
 
 import numpy as np
 import tensorflow as tf
@@ -76,6 +76,8 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         model_dir: (string) directory containing config, weights and log
         params: (Params) contains hyperparameters of the model.
                 Must define: num_epochs, train_size, batch_size, eval_size, save_summary_steps
+        restore_dir: (string) directory containing the weights to be loaded at the beginning.
+                     If None, starts training from scratch.
     """
     # initialize tf.Saver instances to save weights during training
     last_saver = tf.train.Saver() # will keep last 5 epochs
@@ -111,9 +113,9 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
             num_steps = (params.eval_size + 1) // params.batch_size
             metrics = evaluate(sess, eval_model_spec, num_steps, eval_writer)
 
-            # If best_eval, best_save_path
+            # If we find the best accuracy, we save it the weights to 'best_weights'
             eval_acc = metrics['accuracy']
-            if eval_acc >= best_eval_acc:
+            if eval_acc > best_eval_acc:
                 # Store new best accuracy
                 best_eval_acc = eval_acc
                 # Save weights
@@ -144,26 +146,31 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the datasets...")
-    mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
-    train_images = mnist.train.images
-    train_labels = mnist.train.labels.astype(np.int64)
-    test_images = mnist.test.images
-    test_labels = mnist.test.labels.astype(np.int64)
+    data_dir = "data/SIGNS"
+    train_data_dir = os.path.join(data_dir, "train_signs")
 
-    # specify the train and eval datasets size
-    params.train_size = train_images.shape[0]
-    params.eval_size = test_images.shape[0]
+    # Get the filenames and shuffle them
+    # We will take 10% of the training set as development set
+    filenames = os.listdir(train_data_dir)
+    filenames = [os.path.join(train_data_dir, f) for f in filenames]
+    random.shuffle(filenames)
+
+    split = int(0.9 * len(filenames))
+    train_filenames = filenames[:split]
+    eval_filenames = filenames[split:]
+
+    # Specify the train and eval datasets size
+    params.train_size = len(train_filenames)
+    params.eval_size = len(eval_filenames)
 
     # Create the two iterators over the two datasets
-    train_inputs = input_fn(True, train_images, train_labels, params)
-    eval_inputs = input_fn(False, test_images, test_labels, params)
-    logging.info("- done.")
+    train_inputs = input_fn(True, train_filenames, params)
+    eval_inputs = input_fn(False, eval_filenames, params)
 
     # Define the model
     logging.info("Creating the model...")
     train_model_spec = model_fn(True, train_inputs, params)
     eval_model_spec = model_fn(False, eval_inputs, params, reuse=True)
-    logging.info("- done.")
 
     # Train the model
     logging.info("Starting training for {} epoch(s)".format(params.num_epochs))

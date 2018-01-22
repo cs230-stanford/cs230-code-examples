@@ -74,21 +74,22 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
-    test_images = mnist.test.images
-    test_labels = mnist.test.labels.astype(np.int64)
+    data_dir = "data/SIGNS"
+    test_data_dir = os.path.join(data_dir, "test_signs")
+
+    # Get the filenames from the test set
+    test_filenames = os.listdir(test_data_dir)
+    test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames]
 
     # specify the test set size
-    params.test_size = test_images.shape[0]
+    test_size = len(test_filenames)
 
     # create the iterator over the dataset
-    inputs = input_fn(False, test_images, test_labels, params)
-    logging.info("- done.")
+    test_inputs = input_fn(False, test_filenames, params)
 
     # Define the model
     logging.info("Creating the model...")
-    model_spec = model_fn(False, inputs, params, reuse=False)
-    logging.info("- done.")
+    test_model_spec = model_fn(False, test_inputs, params, reuse=False)
 
     logging.info("Starting evaluation")
     saver = tf.train.Saver()
@@ -100,7 +101,7 @@ if __name__ == '__main__':
         saver.restore(sess, save_path)
 
         # Evaluate
-        num_steps = (params.test_size + 1) // params.batch_size
-        metrics = evaluate(sess, model_spec, num_steps, None)
+        num_steps = (test_size + 1) // params.batch_size
+        metrics = evaluate(sess, test_model_spec, num_steps, None)
         save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_dir))
         save_dict_to_json(metrics, save_path)

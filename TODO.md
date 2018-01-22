@@ -20,11 +20,25 @@
   - reuse the weights with 2 graphs and 2 inputs
   - (or use a placeholder??)
 
+- split `hyperparams_search.py` into two files?
+  - one for hyperparam search
+  - one for "syntethizing results"
+
 
 - explore file `explore.py` ?
   - would run the model on some examples (dataset)
   - give access to some errors
   - interaction? (ipython like test?)
+
+
+- explicitely have a train / dev / test split
+  - for the SIGNS dataset, there is only train / test --> do the split in train.py
+  - some images are duplicated??? Ignore or clean up the dataset?
+
+- add tf.summary.image for training images?
+
+- make sure there is only images in SIGNS (no .DS_Store)
+
 
 
 ## Done
@@ -55,3 +69,11 @@
 - explain where to define the model or change it
 - explain how to change hyperparameters
 - how to feed data...
+
+- Explain the general idea of training multiple models, trying different structures...
+  - make sure that experiments are reproducible
+    - for instance, if model.py has incompatible changes (ex: adds batch norm), previous params.json cannot be run again
+    - have to update old params.json to match the new change (ex: put `params.use_bn` argument, and add it to all old `params.json`)
+  - give good names to the dirs in `experiments`
+  - visualize on tensorboard
+  - don't spend too much time watching training progress: launch hyperparam search, let it run and get back later (make sure there is no bug first)
