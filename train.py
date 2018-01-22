@@ -5,9 +5,7 @@ import logging
 import os
 import random
 
-import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 from tqdm import trange
 
 from input_data import input_fn
@@ -153,6 +151,7 @@ if __name__ == '__main__':
     # We will take 10% of the training set as development set
     filenames = os.listdir(train_data_dir)
     filenames = [os.path.join(train_data_dir, f) for f in filenames]
+    random.seed(230)  # Make sure to always have the same dev set (through having the same shuffle)
     random.shuffle(filenames)
 
     split = int(0.9 * len(filenames))

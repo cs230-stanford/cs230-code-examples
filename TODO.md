@@ -39,6 +39,9 @@
 
 - make sure there is only images in SIGNS (no .DS_Store)
 
+- add script `data/download_data.sh`
+  - remove `.gitkeep`?
+
 
 
 ## Done
@@ -69,6 +72,8 @@
 - explain where to define the model or change it
 - explain how to change hyperparameters
 - how to feed data...
+
+- use github release to have multiple version of the code?
 
 - Explain the general idea of training multiple models, trying different structures...
   - make sure that experiments are reproducible

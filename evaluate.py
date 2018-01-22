@@ -1,13 +1,10 @@
 """Train the model"""
 
 import argparse
-import json
 import logging
 import os
 
-import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 
 from input_data import input_fn
 from model.utils import Params

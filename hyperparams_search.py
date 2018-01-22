@@ -6,7 +6,6 @@ import json
 import os
 from subprocess import check_call
 
-import numpy as np
 from tabulate import tabulate
 
 from model.utils import Params
