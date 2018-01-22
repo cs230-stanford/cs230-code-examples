@@ -8,5 +8,17 @@
     "num_epochs": 10,
     "dropout_rate": 0.3,
 
-    "save_summary_steps": 100
+    "save_summary_steps": 100,
+
+    "dataset_params": "data/NER/dataset_params.json",
+
+    "path_words": "data/NER/words.txt",
+    "path_tags": "data/NER/tags.txt",
+
+    "train_sentences": "data/NER/train/sentences.txt",
+    "train_labels": "data/NER/train/labels.txt",
+
+    "test_sentences": "data/NER/test/sentences.txt",
+    "test_labels": "data/NER/test/labels.txt"
+
 }

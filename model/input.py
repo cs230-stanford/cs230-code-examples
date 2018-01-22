@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 
-def load_dataset_from_text(path_txt, vocab=None):
+def load_dataset_from_text(path_txt, vocab):
     """Create tf.data Instance from txt file
 
     Args:
@@ -17,29 +17,28 @@ def load_dataset_from_text(path_txt, vocab=None):
     dataset = dataset.map(lambda string: tf.string_split([string]).values)
 
     # Load vocabularies into lookup table string -> int (word or tag -> id)
-    if vocab is not None:
-        dataset = dataset.map(lambda tokens: vocab.lookup(tokens))
+    dataset = dataset.map(lambda tokens: vocab.lookup(tokens))
 
     return dataset
 
 
-def input_fn(is_training, sentences, tags=None, batch_size=5, pad_word='<pad>', pad_tag='O'):
+def input_fn(is_training, sentences, labels=None, batch_size=5, pad_word='<pad>', pad_tag='O'):
     """Input function for NER
 
     Args:
         is_training: (bool) whether to use the train or test pipeline.
                      At training, we shuffle the data and have multiple epochs
         path_sentences: (string) path to file containing the sentences
-        path_tags: (string) path to file containing the tags
+        path_labels: (string) path to file containing the labels
         batch_size: (int) number of element in a batch
 
     """
     # TODO: num_parallel_calls ?
     # TODO: unknown words
 
-    # Zip the sentence and the tags together
-    if tags is not None:
-        dataset = tf.data.Dataset.zip((sentences, tags))
+    # Zip the sentence and the labels together
+    if labels is not None:
+        dataset = tf.data.Dataset.zip((sentences, labels))
     else:
         dataset = sentences
 
@@ -47,15 +46,15 @@ def input_fn(is_training, sentences, tags=None, batch_size=5, pad_word='<pad>', 
     buffer_size = 100 if is_training else 1
 
     # Create batches and pad the sentences of different length
-    if tags is not None:
+    if labels is not None:
         padded_shapes = (tf.TensorShape([None]),  # sentence of unknown size
-                         tf.TensorShape([None]))  # tags of unknown size
+                         tf.TensorShape([None]))  # labels of unknown size
     else:
         padded_shapes = tf.TensorShape([None])  # sentence of unknown size
 
-    if tags is not None:
+    if labels is not None:
         padding_values = (pad_word,    # sentence padded on the right with word_pad
-                          pad_tag)     # tags padded on the right with tag_pad
+                          pad_tag)     # labels padded on the right with tag_pad
     else:
         padding_values = (pad_word)    # sentence padded on the right with word_pad
 
@@ -68,13 +67,13 @@ def input_fn(is_training, sentences, tags=None, batch_size=5, pad_word='<pad>', 
 
     iterator = dataset.make_initializable_iterator()
 
-    if tags is not None:
-        (sentence, tags) = iterator.get_next()
+    if labels is not None:
+        (sentence, labels) = iterator.get_next()
         init_op = iterator.initializer
 
         inputs = {
             'sentence': sentence,
-            'tags': tags,
+            'labels': labels,
             'iterator_init_op': init_op
         }
     else:

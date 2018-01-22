@@ -49,7 +49,7 @@ def model_fn(is_training, inputs, params, reuse=False):
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
     """
-    tags = inputs['tags']
+    labels = inputs['labels']
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
@@ -60,8 +60,8 @@ def model_fn(is_training, inputs, params, reuse=False):
 
 
     # Define loss and accuracy
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=tags, logits=logits)
-    accuracy = tf.reduce_mean(tf.cast(tf.equal(tags, predictions), tf.float32))
+    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -74,7 +74,7 @@ def model_fn(is_training, inputs, params, reuse=False):
     # Metrics for evaluation using tf.metrics (average over whole dataset)
     with tf.variable_scope("metrics"):
         metrics = {
-            'accuracy': tf.metrics.accuracy(labels=tags, predictions=predictions),
+            'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
             'loss': tf.metrics.mean(loss)
         }
 

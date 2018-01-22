@@ -9,7 +9,7 @@ from subprocess import check_call
 import numpy as np
 from tabulate import tabulate
 
-from model.utils import Params
+from utils.general import Params
 
 
 PYTHON = "python3"

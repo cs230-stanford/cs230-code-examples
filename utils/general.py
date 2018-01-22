@@ -1,4 +1,4 @@
-"""Utility functions for creating the model"""
+"""General utility functions"""
 
 import json
 import logging
@@ -73,14 +73,3 @@ def save_dict_to_json(d, json_path, serializer=float):
         # We need to convert the values to float for json (it doesn't accept np.array, np.float, )
         d = {k: serializer(v) for k, v in d.items()}
         json.dump(d, f, indent=4)
-
-
-def save_vocab_to_txt_file(vocab, txt_path):
-    """Writes one token per line, 0-based line id corresponds to the id of the token.
-
-    Args:
-        vocab: (iterable object) yields token
-        txt_path: (stirng) path to vocab file
-    """
-    with open(txt_path, "w") as f:
-        f.write("\n".join(token for token in vocab))
