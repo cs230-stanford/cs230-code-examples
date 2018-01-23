@@ -106,7 +106,7 @@ def evaluate(model_spec, model_dir, params, restore_dir):
 
     with tf.Session() as sess:
         # Initialize the lookup table
-        sess.run(tf.tables_initializer())
+        sess.run(model_spec['variable_init_op'])
 
         # Reload weights from the weights_dir subdirectory
         save_dir = os.path.join(model_dir, restore_dir)
@@ -148,7 +148,6 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
 
         # Initialize model variables
         sess.run(train_model_spec['variable_init_op'])
-        sess.run(tf.tables_initializer()) # initialize the lookup tables
 
         best_eval_acc = 0.0
         for epoch in range(params.num_epochs):

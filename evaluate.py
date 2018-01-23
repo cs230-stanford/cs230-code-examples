@@ -46,8 +46,8 @@ if __name__ == '__main__':
     # Get paths for vocabularies and dataset
     path_words = os.path.join(args.data_dir, 'words.txt')
     path_tags = os.path.join(args.data_dir, 'tags.txt')
-    path_eval_sentences = os.path.join(args.data_dir, 'test/sentences.txt')
-    path_eval_labels = os.path.join(args.data_dir, 'test/labels.txt')
+    path_eval_sentences = os.path.join(args.data_dir, 'dev/sentences.txt')
+    path_eval_labels = os.path.join(args.data_dir, 'dev/labels.txt')
 
     # Load Vocabularies
     words = tf.contrib.lookup.index_table_from_file(path_words, num_oov_buckets=num_oov_buckets)

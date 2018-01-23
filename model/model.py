@@ -95,7 +95,8 @@ def model_fn(mode, inputs, params, reuse=False):
     # Create the model specification and return it
     # It contains nodes or operations in the graph that will be used for training and evaluation
     model_spec = inputs
-    model_spec['variable_init_op'] = tf.global_variables_initializer()
+    variable_init_op = tf.group(*[tf.global_variables_initializer(), tf.tables_initializer()])
+    model_spec['variable_init_op'] = variable_init_op
     model_spec["predictions"] = predictions
     model_spec['loss'] = loss
     model_spec['accuracy'] = accuracy

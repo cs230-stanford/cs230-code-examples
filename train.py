@@ -18,8 +18,7 @@ from model.model import model_fn
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test',
                     help="Directory containing params.json")
-parser.add_argument('--data_dir', default='data/NER',
-                    help="Directory containing the dataset")
+parser.add_argument('--data_dir', default='data/NER', help="Directory containing the dataset")
 parser.add_argument('--restore_dir', default=None,
                     help="Optional, directory containing weights to reload before training")
 
@@ -48,8 +47,8 @@ if __name__ == '__main__':
     path_tags = os.path.join(args.data_dir, 'tags.txt')
     path_train_sentences = os.path.join(args.data_dir, 'train/sentences.txt')
     path_train_labels = os.path.join(args.data_dir, 'train/labels.txt')
-    path_eval_sentences = os.path.join(args.data_dir, 'test/sentences.txt')
-    path_eval_labels = os.path.join(args.data_dir, 'test/labels.txt')
+    path_eval_sentences = os.path.join(args.data_dir, 'dev/sentences.txt')
+    path_eval_labels = os.path.join(args.data_dir, 'dev/labels.txt')
 
     # Load Vocabularies
     words = tf.contrib.lookup.index_table_from_file(path_words, num_oov_buckets=num_oov_buckets)
@@ -63,7 +62,7 @@ if __name__ == '__main__':
     eval_labels = load_dataset_from_text(path_eval_labels, tags)
 
     # Specify other parameters for the dataset and the model
-    params.eval_size = params.test_size
+    params.eval_size = params.dev_size
     params.buffer_size = params.train_size # buffer size for shuffling
     params.id_pad_word = words.lookup(tf.constant(params.pad_word))
     params.id_pad_tag = tags.lookup(tf.constant(params.pad_tag))

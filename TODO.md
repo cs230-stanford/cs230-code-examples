@@ -1,5 +1,7 @@
 # TODO
 
+- group the tf.table_initializer() some other place ? (goal would be to have a common pipeline)
+
 - explore file `explore.py` ?
   - would run the model on some examples (dataset)
   - give access to some errors

@@ -3,11 +3,13 @@
 import argparse
 from collections import Counter
 import json
+import os
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--min_count_word', default=1, help="Minimum count for words in the dataset")
 parser.add_argument('--min_count_tag', default=1, help="Minimum count for tags in the dataset")
+parser.add_argument('--data_dir', default='data/NER', help="Directory containing the dataset")
 
 
 def save_vocab_to_txt_file(vocab, txt_path):
@@ -56,19 +58,22 @@ if __name__ == '__main__':
     # Build word vocab with train and test datasets
     print("Building word vocabulary...")
     words = Counter()
-    size_train_sentences = update_vocab('data/NER/train/sentences.txt', words)
-    size_test_sentences = update_vocab('data/NER/test/sentences.txt', words)
+    size_train_sentences = update_vocab(os.path.join(args.data_dir, 'train/sentences.txt'), words)
+    size_dev_sentences = update_vocab(os.path.join(args.data_dir, 'dev/sentences.txt'), words)
+    size_test_sentences = update_vocab(os.path.join(args.data_dir, 'test/sentences.txt'), words)
     print("- done.")
 
     # Build tag vocab with train and test datasets
     print("Building tag vocabulary...")
     tags = Counter()
-    size_train_tags = update_vocab('data/NER/train/labels.txt', tags)
-    size_test_tags = update_vocab('data/NER/test/labels.txt', tags)
+    size_train_tags = update_vocab(os.path.join(args.data_dir, 'train/labels.txt'), tags)
+    size_dev_tags = update_vocab(os.path.join(args.data_dir, 'dev/labels.txt'), tags)
+    size_test_tags = update_vocab(os.path.join(args.data_dir, 'test/labels.txt'), tags)
     print("- done.")
 
     # Assert same number of examples in datasets
     assert size_train_sentences == size_train_tags
+    assert size_dev_sentences == size_dev_tags
     assert size_test_sentences == size_test_tags
 
     # Only keep most frequent tokens
@@ -77,14 +82,15 @@ if __name__ == '__main__':
 
     # Save vocabularies to file
     print("Saving vocabularies to file...")
-    save_vocab_to_txt_file(words, 'data/NER/words.txt')
-    save_vocab_to_txt_file(tags, 'data/NER/tags.txt')
+    save_vocab_to_txt_file(words, os.path.join(args.data_dir, 'words.txt'))
+    save_vocab_to_txt_file(tags, os.path.join(args.data_dir, 'tags.txt'))
     print("- done.")
 
     # Save datasets properties in json file
     num_oov_buckets = 1 # number of buckets (= number of ids) for unknown words
     sizes = {
         'train_size': size_train_sentences,
+        'dev_size': size_dev_sentences,
         'test_size': size_test_sentences,
         'vocab_size': len(words) + num_oov_buckets,
         'number_of_tags': len(tags),
@@ -92,7 +98,7 @@ if __name__ == '__main__':
         'pad_tag': 'O',
         'num_oov_buckets': num_oov_buckets
     }
-    save_dict_to_json(sizes, 'data/NER/dataset_params.json')
+    save_dict_to_json(sizes, os.path.join(args.data_dir, 'dataset_params.json'))
 
     # Logging sizes
     to_print = "\n".join("- {}: {}".format(k, v) for k, v in sizes.items())
