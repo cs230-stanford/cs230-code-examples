@@ -6,8 +6,8 @@ import json
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--min_count_word', default=1)
-parser.add_argument('--min_count_tag', default=1)
+parser.add_argument('--min_count_word', default=1, help="Minimum count for words in the dataset")
+parser.add_argument('--min_count_tag', default=1, help="Minimum count for tags in the dataset")
 
 
 def save_vocab_to_txt_file(vocab, txt_path):
@@ -56,15 +56,15 @@ if __name__ == '__main__':
     # Build word vocab with train and test datasets
     print("Building word vocabulary...")
     words = Counter()
-    size_train_sentences = update_vocab('train/sentences.txt', words)
-    size_test_sentences = update_vocab('test/sentences.txt', words)
+    size_train_sentences = update_vocab('data/NER/train/sentences.txt', words)
+    size_test_sentences = update_vocab('data/NER/test/sentences.txt', words)
     print("- done.")
 
     # Build tag vocab with train and test datasets
     print("Building tag vocabulary...")
     tags = Counter()
-    size_train_tags = update_vocab('train/labels.txt', tags)
-    size_test_tags = update_vocab('test/labels.txt', tags)
+    size_train_tags = update_vocab('data/NER/train/labels.txt', tags)
+    size_test_tags = update_vocab('data/NER/test/labels.txt', tags)
     print("- done.")
 
     # Assert same number of examples in datasets
@@ -77,20 +77,22 @@ if __name__ == '__main__':
 
     # Save vocabularies to file
     print("Saving vocabularies to file...")
-    save_vocab_to_txt_file(words, 'words.txt')
-    save_vocab_to_txt_file(tags, 'tags.txt')
+    save_vocab_to_txt_file(words, 'data/NER/words.txt')
+    save_vocab_to_txt_file(tags, 'data/NER/tags.txt')
     print("- done.")
 
     # Save datasets properties in json file
+    num_oov_buckets = 1 # number of buckets (= number of ids) for unknown words
     sizes = {
         'train_size': size_train_sentences,
         'test_size': size_test_sentences,
-        'vocab_size': len(words),
+        'vocab_size': len(words) + num_oov_buckets,
         'number_of_tags': len(tags),
         'pad_word': '<pad>',
         'pad_tag': 'O',
+        'num_oov_buckets': num_oov_buckets
     }
-    save_dict_to_json(sizes, 'dataset_params.json')
+    save_dict_to_json(sizes, 'data/NER/dataset_params.json')
 
     # Logging sizes
     to_print = "\n".join("- {}: {}".format(k, v) for k, v in sizes.items())

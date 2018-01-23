@@ -3,11 +3,11 @@
 import tensorflow as tf
 
 
-def build_model(is_training, inputs, params):
+def build_model(mode, inputs, params):
     """Compute logits of the model (output distribution)
 
     Args:
-        is_training: (bool) whether we are training or not
+        mode: (string) 'train', 'eval', etc.
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
         params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
@@ -36,11 +36,11 @@ def build_model(is_training, inputs, params):
     return logits
 
 
-def model_fn(is_training, inputs, params, reuse=False):
+def model_fn(mode, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
     Args:
-        is_training: (bool) whether we are training or not
+        mode: (string) 'train', 'eval', etc.
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
         params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
@@ -49,13 +49,14 @@ def model_fn(is_training, inputs, params, reuse=False):
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
     """
+    is_training = (mode == 'train')
     labels = inputs['labels']
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
     with tf.variable_scope('model', reuse=reuse):
         # compute the output distribution of the model and the predictions
-        logits = build_model(is_training, inputs, params)
+        logits = build_model(mode, inputs, params)
         predictions = tf.argmax(logits, -1)
 
 

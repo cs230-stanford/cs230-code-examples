@@ -9,80 +9,68 @@ def load_dataset_from_text(path_txt, vocab):
     Args:
         path_txt: (string) path containing one example per line
         vocab: (tf.lookuptable)
+
+    Returns:
+        dataset: (tf.Dataset) yielding list of ids of tokens for each example
     """
-    # Load txt file containing tokens
+    # Load txt file, one example per line
     dataset = tf.data.TextLineDataset(path_txt)
 
-    # Convert line into list of tokens
+    # Convert line into list of tokens, splitting by white space
     dataset = dataset.map(lambda string: tf.string_split([string]).values)
 
-    # Load vocabularies into lookup table string -> int (word or tag -> id)
+    # Lookup tokens to return their ids
     dataset = dataset.map(lambda tokens: vocab.lookup(tokens))
 
     return dataset
 
 
-def input_fn(is_training, sentences, labels=None, batch_size=5, pad_word='<pad>', pad_tag='O'):
+def input_fn(mode, sentences, labels, params):
     """Input function for NER
 
     Args:
-        is_training: (bool) whether to use the train or test pipeline.
+        mode: (string) 'train', 'eval' or any other mode you can think of
                      At training, we shuffle the data and have multiple epochs
-        path_sentences: (string) path to file containing the sentences
-        path_labels: (string) path to file containing the labels
-        batch_size: (int) number of element in a batch
+        sentences: (tf.Dataset) yielding list of ids of words
+        datasets: (tf.Dataset) yielding list of ids of tags
+        params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
 
     """
     # TODO: num_parallel_calls ?
-    # TODO: unknown words
+    # Load all the dataset in memory for shuffling is training
+    is_training = (mode == 'train')
+    buffer_size = params.buffer_size if is_training else 1
 
     # Zip the sentence and the labels together
-    if labels is not None:
-        dataset = tf.data.Dataset.zip((sentences, labels))
-    else:
-        dataset = sentences
+    dataset = tf.data.Dataset.zip((sentences, labels))
 
-    # Load all the dataset in memory for shuffling is training
-    buffer_size = 100 if is_training else 1
+
 
     # Create batches and pad the sentences of different length
-    if labels is not None:
-        padded_shapes = (tf.TensorShape([None]),  # sentence of unknown size
-                         tf.TensorShape([None]))  # labels of unknown size
-    else:
-        padded_shapes = tf.TensorShape([None])  # sentence of unknown size
+    padded_shapes = (tf.TensorShape([None]),  # sentence of unknown size
+                     tf.TensorShape([None]))  # labels of unknown size
 
-    if labels is not None:
-        padding_values = (pad_word,    # sentence padded on the right with word_pad
-                          pad_tag)     # labels padded on the right with tag_pad
-    else:
-        padding_values = (pad_word)    # sentence padded on the right with word_pad
-
+    padding_values = (params.id_pad_word,    # sentence padded on the right with id_pad_word
+                      params.id_pad_tag)     # labels padded on the right with id_pad_tag
 
     dataset = (dataset
-        .padded_batch(batch_size, padded_shapes=padded_shapes, padding_values=padding_values)
+        .padded_batch(params.batch_size, padded_shapes=padded_shapes, padding_values=padding_values)
         .shuffle(buffer_size=buffer_size)
         .prefetch(1)  # make sure you always have one batch ready to serve
     )
 
+    # Create initializable iterator from this dataset so that we can reset at each epoch
     iterator = dataset.make_initializable_iterator()
 
-    if labels is not None:
-        (sentence, labels) = iterator.get_next()
-        init_op = iterator.initializer
+    # Query the output of the iterator for input to the model
+    (sentence, labels) = iterator.get_next()
+    init_op = iterator.initializer
 
-        inputs = {
-            'sentence': sentence,
-            'labels': labels,
-            'iterator_init_op': init_op
-        }
-    else:
-        sentence = iterator.get_next()
-        init_op = tf.group(*[tf.tables_initializer(), iterator.initializer])
-
-        inputs = {
-            'sentence': sentence,
-            'iterator_init_op': init_op
-        }
+    # Build and return a dictionnary containing the nodes / ops
+    inputs = {
+        'sentence': sentence,
+        'labels': labels,
+        'iterator_init_op': init_op
+    }
 
     return inputs

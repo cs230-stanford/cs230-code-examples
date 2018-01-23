@@ -1,18 +1,18 @@
 # TODO
 
-- what about inference when we don't know the labels?
+- explore file `explore.py` ?
+  - would run the model on some examples (dataset)
+  - give access to some errors
+  - interaction? (ipython like test?)
+
+
+## Done
+
+- new file for synthesize experiments + add all subdir eval (recursive tree search)
 
 - should we put the paths to vocabs and datasets in `params.json` ?
-
-- move `input_data.py` in `model/`
-
-- rename `tags` into `labels`
-
-- change name `eval_metrics` to `metrics`
-  - introduces confusion: only have one set of metrics that are said to be an average on the dataset
-  - what we log with tqdm is not metrics but "training monitoring"
-
-- put paths to datasets into params.json ?
+  - things that don't change should be put into dataset/params.json
+  - add args data_dir
 
 - move summaries into folders
 
@@ -30,14 +30,25 @@
   - reuse the weights with 2 graphs and 2 inputs
   - (or use a placeholder??)
 
+- move `input_data.py` in `model/`
 
-- explore file `explore.py` ?
-  - would run the model on some examples (dataset)
-  - give access to some errors
-  - interaction? (ipython like test?)
+- rename `tags` into `labels`
 
+- change name `eval_metrics` to `metrics`
+  - introduces confusion: only have one set of metrics that are said to be an average on the dataset
+  - what we log with tqdm is not metrics but "training monitoring"
 
-## Done
+- put paths to datasets into params.json ?
+
+- what about inference when we don't know the labels?
+  - do not handle the case where no labels
+  - change is_training to string mode
+
+- everything that runs -> root and the rest goes into folders
+
+- add description for arguments args
+
+- for the dev set, find a way to "hard-code" which examples are which
 
 - add logging
   - everything logged to terminal also logged to file in model_dir
