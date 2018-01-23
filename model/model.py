@@ -48,11 +48,11 @@ def build_model(is_training, inputs, params):
     return logits
 
 
-def model_fn(is_training, inputs, params, reuse=False):
+def model_fn(mode, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
     Args:
-        is_training: (bool) whether we are training or not
+        mode: (string) can be 'train' or 'eval'
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
         params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
@@ -61,6 +61,7 @@ def model_fn(is_training, inputs, params, reuse=False):
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
     """
+    is_training = (mode == 'train')
     labels = inputs['labels']
     labels = tf.cast(labels, tf.int64)
 
@@ -107,6 +108,17 @@ def model_fn(is_training, inputs, params, reuse=False):
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
     tf.summary.image('train_image', inputs['images'])
+
+    #TODO: if mode == 'eval': ?
+    # Add incorrectly labeled images
+    mask = tf.not_equal(labels, predictions)
+    incorrect_images = tf.boolean_mask(inputs['images'], mask)
+
+    # Add a different summary to know how they were misclassified
+    for label in range(0, 6):
+        mask_label = tf.logical_and(mask, tf.equal(predictions, label))
+        incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
+        tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION

@@ -6,7 +6,7 @@ import os
 
 import tensorflow as tf
 
-from input_data import input_fn
+from model.input_data import input_fn
 from model.utils import Params
 from model.utils import set_logger
 from model.utils import save_dict_to_json
@@ -14,8 +14,12 @@ from model.model import model_fn
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_dir', default='experiments/test')
-parser.add_argument('--restore_dir', default='best_weights') # subdir of model_dir with weights
+parser.add_argument('--model_dir', default='experiments/test',
+                    help="Experiment directory containing params.json")
+parser.add_argument('--data_dir', default='data/SIGNS',
+                    help="Directory containing the dataset")
+parser.add_argument('--restore_dir', default='best_weights',
+                    help="Subdirectory of model dir containing the weights")
 
 
 def evaluate(sess, model_spec, num_steps, writer=None):
@@ -71,7 +75,7 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    data_dir = "data/SIGNS"
+    data_dir = args.data_dir
     test_data_dir = os.path.join(data_dir, "test_signs")
 
     # Get the filenames from the test set
@@ -86,7 +90,7 @@ if __name__ == '__main__':
 
     # Define the model
     logging.info("Creating the model...")
-    test_model_spec = model_fn(False, test_inputs, params, reuse=False)
+    test_model_spec = model_fn('eval', test_inputs, params, reuse=False)
 
     logging.info("Starting evaluation")
     saver = tf.train.Saver()

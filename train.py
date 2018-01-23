@@ -8,7 +8,7 @@ import random
 import tensorflow as tf
 from tqdm import trange
 
-from input_data import input_fn
+from model.input_data import input_fn
 from model.utils import Params
 from model.utils import set_logger
 from model.utils import save_dict_to_json
@@ -17,8 +17,12 @@ from evaluate import evaluate
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_dir', default='experiments/test')
-parser.add_argument('--restore_dir', default=None)
+parser.add_argument('--model_dir', default='experiments/test',
+                    help="Experiment directory containing params.json")
+parser.add_argument('--data_dir', default='data/SIGNS',
+                    help="Directory containing the dataset")
+parser.add_argument('--restore_from', default=None,
+                    help="Optional, directory or file containing weights to reload before training")
 
 
 def train(sess, model_spec, params, num_steps, writer):
@@ -65,7 +69,7 @@ def train(sess, model_spec, params, num_steps, writer):
     logging.info("- Train metrics: " + metrics_string)
 
 
-def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, restore_dir=None):
+def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, restore_from=None):
     """Train the model and evaluate every epoch.
 
     Args:
@@ -74,8 +78,8 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         model_dir: (string) directory containing config, weights and log
         params: (Params) contains hyperparameters of the model.
                 Must define: num_epochs, train_size, batch_size, eval_size, save_summary_steps
-        restore_dir: (string) directory containing the weights to be loaded at the beginning.
-                     If None, starts training from scratch.
+        restore_from: (string) directory or file containing the weights to be loaded
+                      If None, starts training from scratch.
     """
     # initialize tf.Saver instances to save weights during training
     last_saver = tf.train.Saver() # will keep last 5 epochs
@@ -83,17 +87,19 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
 
     with tf.Session() as sess:
         # reload weights from directory if specified
-        if restore_dir is not None:
-            logging.info("Restoring parameters from {}".format(restore_dir))
-            save_path = tf.train.latest_checkpoint(restore_dir)
-            last_saver.restore(sess, save_path)
+        if restore_from is not None:
+            logging.info("Restoring parameters from {}".format(restore_from))
+            if os.path.isdir(restore_from):
+                restore_from = tf.train.latest_checkpoint(restore_from)
+            last_saver.restore(sess, restore_from)
+        else:
+            # Initialize model variables
+            sess.run(train_model_spec['variable_init_op'])
 
         # For tensorboard (takes care of writing summaries to files)
         train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train_summaries'), sess.graph)
         eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval_summaries'), sess.graph)
 
-        # Initialize model variables
-        sess.run(train_model_spec['variable_init_op'])
 
         best_eval_acc = 0.0
         for epoch in range(params.num_epochs):
@@ -144,7 +150,7 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the datasets...")
-    data_dir = "data/SIGNS"
+    data_dir = args.data_dir
     train_data_dir = os.path.join(data_dir, "train_signs")
 
     # Get the filenames and shuffle them
@@ -152,6 +158,7 @@ if __name__ == '__main__':
     filenames = os.listdir(train_data_dir)
     filenames = [os.path.join(train_data_dir, f) for f in filenames]
     random.seed(230)  # Make sure to always have the same dev set (through having the same shuffle)
+    # TODO: sort(filenames)
     random.shuffle(filenames)
 
     split = int(0.9 * len(filenames))
@@ -168,9 +175,9 @@ if __name__ == '__main__':
 
     # Define the model
     logging.info("Creating the model...")
-    train_model_spec = model_fn(True, train_inputs, params)
-    eval_model_spec = model_fn(False, eval_inputs, params, reuse=True)
+    train_model_spec = model_fn('train', train_inputs, params)
+    eval_model_spec = model_fn('eval', eval_inputs, params, reuse=True)
 
     # Train the model
     logging.info("Starting training for {} epoch(s)".format(params.num_epochs))
-    train_and_evaluate(train_model_spec, eval_model_spec, args.model_dir, params, args.restore_dir)
+    train_and_evaluate(train_model_spec, eval_model_spec, args.model_dir, params, args.restore_from)
