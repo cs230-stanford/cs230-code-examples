@@ -84,7 +84,6 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train_summaries'), sess.graph)
         eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval_summaries'), sess.graph)
 
-
         best_eval_acc = 0.0
         for epoch in range(params.num_epochs):
             # Run one epoch
