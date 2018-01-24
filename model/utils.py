@@ -18,19 +18,16 @@ class Params():
     def __init__(self, json_path):
         self.update(json_path)
 
-
     def save(self, json_path):
         """Saves parameters to json file"""
         with open(json_path, 'w') as f:
             json.dump(self.__dict__, f, indent=4)
 
-
     def update(self, json_path):
-        """Loads parameters form json file"""
+        """Loads parameters from json file"""
         with open(json_path) as f:
             params = json.load(f)
             self.__dict__.update(params)
-
 
     @property
     def dict(self):
@@ -67,8 +64,8 @@ def set_logger(log_path):
         logger.addHandler(stream_handler)
 
 
-def save_dict_to_json(d, json_path, serializer=float):
-    """Saves dict to json file
+def save_dict_to_json(d, json_path):
+    """Saves dict of floats in json file
 
     Args:
         d: (dict) of float-castable values (np.float, int, float, etc.)
@@ -76,5 +73,5 @@ def save_dict_to_json(d, json_path, serializer=float):
     """
     with open(json_path, 'w') as f:
         # We need to convert the values to float for json (it doesn't accept np.array, np.float, )
-        d = {k: serializer(v) for k, v in d.items()}
+        d = {k: float(v) for k, v in d.items()}
         json.dump(d, f, indent=4)
