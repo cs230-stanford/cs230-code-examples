@@ -8,12 +8,12 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from utils.general import Params
-from utils.general import set_logger
-from utils.tf import evaluate
-from model.input import input_fn
-from model.input import load_dataset_from_text
-from model.model import model_fn
+from model.utils import Params
+from model.utils import set_logger
+from model.evaluation import evaluate
+from model.input_fn import input_fn
+from model.input_fn import load_dataset_from_text
+from model.model_fn import model_fn
 
 
 parser = argparse.ArgumentParser()

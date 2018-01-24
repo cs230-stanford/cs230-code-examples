@@ -44,8 +44,6 @@ def input_fn(mode, sentences, labels, params):
     # Zip the sentence and the labels together
     dataset = tf.data.Dataset.zip((sentences, labels))
 
-
-
     # Create batches and pad the sentences of different length
     padded_shapes = (tf.TensorShape([None]),  # sentence of unknown size
                      tf.TensorShape([None]))  # labels of unknown size

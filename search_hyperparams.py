@@ -6,7 +6,7 @@ from subprocess import check_call
 
 import numpy as np
 
-from utils.general import Params
+from model.utils import Params
 
 
 PYTHON = "python3"

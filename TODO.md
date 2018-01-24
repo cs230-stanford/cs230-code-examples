@@ -10,6 +10,8 @@
 
 ## Done
 
+- names for module and verbs for script files
+
 - new file for synthesize experiments + add all subdir eval (recursive tree search)
 
 - should we put the paths to vocabs and datasets in `params.json` ?
