@@ -1,7 +1,7 @@
 {
     "learning_rate": 1e-3,
     "dropout_rate":0.8,
-    "batch_size": 32,
+    "batch_size": 16,
     "num_epochs": 10,
     "cuda": 0,
     "model_version": "2_fc",
