@@ -1,11 +1,14 @@
 import random
 import numpy as np
 
+import torch
+from torch.autograd import Variable
+
 from tensorflow.examples.tutorials.mnist import input_data
 
 def load_data(types):
     data = {}
-    mnist = input_data.read_data_sets('data/MNIST', one_hot=False)
+    mnist = input_data.read_data_sets('mnist/data/MNIST', one_hot=False)
     
     if 'train' in types:
         train_images = mnist.train.images[:40000]
@@ -34,13 +37,19 @@ def load_data(types):
     return data
     
     
-def data_iterator(data, batch_size, shuffle=False):     
+def data_iterator(data, params, shuffle=False):     
     order = list(range(data['size']))
     if shuffle:
         random.seed(230)
         random.shuffle(order)
     
-    for i in range((data['size']+1)//batch_size):
-        batch_data = data['data'][order[i*batch_size:(i+1)*batch_size]]
-        batch_labels = data['labels'][order[i*batch_size:(i+1)*batch_size]]
+    for i in range((data['size']+1)//params.batch_size):
+        batch_data = data['data'][order[i*params.batch_size:(i+1)*params.batch_size]]
+        batch_labels = data['labels'][order[i*params.batch_size:(i+1)*params.batch_size]]
+
+        batch_data, batch_labels = torch.from_numpy(batch_data), torch.from_numpy(batch_labels)
+        if params.cuda:
+            batch_data, batch_labels = batch_data.cuda(), batch_labels.cuda()
+        batch_data, batch_labels = Variable(batch_data), Variable(batch_labels)
+        
         yield batch_data, batch_labels

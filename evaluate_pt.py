@@ -21,14 +21,17 @@ parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default='best') # subdir of model_dir with weights
 
 
-def evaluate(model, loss_fn, data_iterator, params, metrics, num_steps):
-    """Train the model on `num_steps` batches.
+def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
+    """Evaluate the model on `num_steps` batches.
 
     Args:
-        sess: (tf.Session) current session
-        model_spec: (dict) contains the graph operations or nodes needed for training
-        num_steps: (int) train for this number of batches
-        writer: (tf.summary.FileWriter) writer for summaries. Is None if we don't log anything
+        model:
+        loss_fn:
+        data_iterator:
+        metrics:
+        params:
+        num_steps: (int)
+    
     """
     
     model.eval()    # set model to eval mode
@@ -38,10 +41,6 @@ def evaluate(model, loss_fn, data_iterator, params, metrics, num_steps):
     for _ in range(num_steps):
         # prepare the batch by converting numpy arrays to torch Variables
         data_batch, labels_batch = next(data_iterator)
-        data_batch, labels_batch = torch.from_numpy(data_batch), torch.from_numpy(labels_batch)
-        if params.cuda:
-            data_batch, labels_batch = data_batch.cuda(), labels_batch.cuda()
-        data_batch, labels_batch = Variable(data_batch, volatile=True), Variable(labels_batch)
         
         # compute model output
         output_batch = model(data_batch)
@@ -97,6 +96,6 @@ if __name__ == '__main__':
 
     # Evaluate
     num_steps = (params.test_size + 1) // params.batch_size
-    test_metrics = evaluate(model, loss_fn, test_data_iterator, params, metrics, num_steps)
+    test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, params, num_steps)
     save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_dir))
     save_dict_to_json(metrics, save_path)

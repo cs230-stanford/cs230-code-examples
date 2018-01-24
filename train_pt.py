@@ -14,13 +14,14 @@ from torch.autograd import Variable
 from tqdm import trange
 
 import utils
-import mnist.net as net
-import mnist.dataloader as dataloader
+import signs.net as net
+import signs.data_loader as data_loader
 from evaluate_pt import evaluate
 import pdb
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--data_dir', default='signs/data')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default=None)
 
@@ -29,11 +30,14 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps, 
     """Train the model on `num_steps` batches
 
     Args:
-        sess: (tf.Session) current session
-        model_spec: (dict) contains the graph operations or nodes needed for training
-        params: (Params) hyperparameters
-        num_steps: (int) train for this number of batches
-        writer: (tf.summary.FileWriter) writer for summaries
+        model:
+        optimizer: 
+        loss_fn: 
+        data_iterator: 
+        metrics: 
+        params:
+        num_steps: (int) number of batches to train on, each of size params.batch_size
+        summary:
     """
 
     model.train()   # set model to training mode
@@ -44,10 +48,6 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps, 
     for i in t:
         # prepare the batch by converting numpy arrays to torch Variables
         train_batch, labels_batch = next(data_iterator)
-        train_batch, labels_batch = torch.from_numpy(train_batch), torch.from_numpy(labels_batch)
-        if params.cuda:
-            train_batch, labels_batch = train_batch.cuda(), labels_batch.cuda()
-        train_batch, labels_batch = Variable(train_batch), Variable(labels_batch)
                     
         # compute model output and loss
         output_batch = model(train_batch)
@@ -78,11 +78,14 @@ def train_and_evaluate(model, train_data, val_data, optimizer, loss_fn, metrics,
     """Train the model and evaluate every epoch.
 
     Args:
-        train_model_spec: (dict) contains the graph operations or nodes needed for training
-        val_model_spec: (dict) contains the graph operations or nodes needed for evaluation
-        model_dir: (string) directory containing config, weights and log
-        params: (Params) contains hyperparameters of the model.
-                Must define: num_epochs, train_size, batch_size, val_size, save_summary_steps
+        model:
+        train_data:
+        optimizer: 
+        loss_fn: 
+        metrics: 
+        params:
+        model_dir: 
+        restore_file:
     """
     # reload weights from directory if specified
     if restore_file is not None:
@@ -97,13 +100,13 @@ def train_and_evaluate(model, train_data, val_data, optimizer, loss_fn, metrics,
         logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
         # compute number of batches in one epoch (one full pass over the training set)
         num_steps = (params.train_size + 1) // params.batch_size
-        train_data_iterator = dataloader.data_iterator(train_data, params.batch_size, shuffle=False)
+        train_data_iterator = data_loader.data_iterator(train_data, params, shuffle=True)
         train(model, optimizer, loss_fn, train_data_iterator, metrics, params, num_steps, train_summary)
             
         # Evaluate for one epoch on validation set
         num_steps = (params.val_size + 1) // params.batch_size
-        val_data_iterator = dataloader.data_iterator(val_data, params.batch_size, shuffle=False)
-        val_metrics = evaluate(model, loss_fn, val_data_iterator, params, metrics, num_steps)
+        val_data_iterator = data_loader.data_iterator(val_data, params, shuffle=False)
+        val_metrics = evaluate(model, loss_fn, val_data_iterator, metrics, params, num_steps)
         
         val_acc = val_metrics['accuracy']
         is_best = val_acc>=best_val_acc
@@ -150,10 +153,10 @@ if __name__ == '__main__':
     logging.info("Loading the datasets...")
     
     # load data
-    data = dataloader.load_data(['train', 'val'])
+    data = data_loader.load_data(['train', 'val'], args.data_dir)
     train_data = data['train']
     val_data = data['val']
-
+    pdb.set_trace()
     # specify the train and val datasets size
     params.train_size = train_data['size']
     params.val_size = val_data['size']
