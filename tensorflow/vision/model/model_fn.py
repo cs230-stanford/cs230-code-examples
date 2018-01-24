@@ -10,38 +10,49 @@ def build_model(is_training, inputs, params):
         is_training: (bool) whether we are training or not
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
-        params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
+        params: (Params) hyperparameters
 
     Returns:
         output: (tf.Tensor) output of the model
     """
     images = inputs['images']
 
-    if params.model_version == '2_fc':
-        h1 = tf.layers.dense(images, 64, activation=tf.nn.relu)
-        h1 = tf.layers.dropout(h1, rate=params.dropout_rate, training=is_training)
-        logits = tf.layers.dense(h1, 10)
-    elif params.model_version == '2_conv_1_fc':
-        out = tf.reshape(images, [-1, 28, 28, 1])
-        out = tf.layers.conv2d(out, 32, 5, padding='same', activation=tf.nn.relu)
-        out = tf.layers.max_pooling2d(out, 2, 2)
-        out = tf.layers.conv2d(out, 64, 5, padding='same', activation=tf.nn.relu)
-        out = tf.layers.max_pooling2d(out, 2, 2)
-        out = tf.reshape(out, [-1, 7 * 7 * 64])
-        out = tf.layers.dense(out, 128)
-        out = tf.layers.dropout(out, rate=params.dropout_rate, training=is_training)
-        logits = tf.layers.dense(out, 10)
-    else:
-        raise NotImplementedError("Unknown model version: {}".format(params.model_version))
+    assert images.get_shape().as_list() == [None, 224, 224, 3]
+
+    out = images
+    # Define the number of channels of each convolution
+    # For each block, we do: 3x3 conv -> batch norm -> relu -> 2x2 maxpool
+    num_channels = params.num_channels
+    bn_momentum = params.bn_momentum
+    channels = [num_channels, num_channels * 2, num_channels * 4,
+                num_channels * 8, num_channels * 16]
+    for i, c in enumerate(channels):
+        with tf.variable_scope('block_{}'.format(i+1)):
+            out = tf.layers.conv2d(out, c, 3, padding='same')
+            if params.use_batch_norm:
+                out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
+            out = tf.nn.relu(out)
+            out = tf.layers.max_pooling2d(out, 2, 2)
+
+    assert out.get_shape().as_list() == [None, 7, 7, num_channels * 16]
+
+    out = tf.reshape(out, [-1, 7 * 7 * num_channels * 16])
+    with tf.variable_scope('fc_1'):
+        out = tf.layers.dense(out, num_channels * 16)
+        if params.use_batch_norm:
+            out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
+        out = tf.nn.relu(out)
+    with tf.variable_scope('fc_2'):
+        logits = tf.layers.dense(out, 6)
 
     return logits
 
 
-def model_fn(is_training, inputs, params, reuse=False):
+def model_fn(mode, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
     Args:
-        is_training: (bool) whether we are training or not
+        mode: (string) can be 'train' or 'eval'
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
         params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
@@ -50,12 +61,14 @@ def model_fn(is_training, inputs, params, reuse=False):
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
     """
+    is_training = (mode == 'train')
     labels = inputs['labels']
+    labels = tf.cast(labels, tf.int64)
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
     with tf.variable_scope('model', reuse=reuse):
-        # compute the output distribution of the model and the predictions
+        # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
         predictions = tf.argmax(logits, 1)
 
@@ -67,7 +80,13 @@ def model_fn(is_training, inputs, params, reuse=False):
     if is_training:
         optimizer = tf.train.AdamOptimizer(params.learning_rate)
         global_step = tf.train.get_or_create_global_step()
-        train_op = optimizer.minimize(loss, global_step=global_step)
+        if params.use_batch_norm:
+            # Add a dependency to update the moving mean and variance for batch normalization
+            with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
+                train_op = optimizer.minimize(loss, global_step=global_step)
+        else:
+            train_op = optimizer.minimize(loss, global_step=global_step)
+
 
     # -----------------------------------------------------------
     # METRICS AND SUMMARIES
@@ -88,6 +107,17 @@ def model_fn(is_training, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
+    tf.summary.image('train_image', inputs['images'])
+
+    #TODO: if mode == 'eval': ?
+    # Add incorrectly labeled images
+    mask = tf.not_equal(labels, predictions)
+
+    # Add a different summary to know how they were misclassified
+    for label in range(0, 6):
+        mask_label = tf.logical_and(mask, tf.equal(predictions, label))
+        incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
+        tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION
