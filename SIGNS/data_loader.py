@@ -72,8 +72,8 @@ def data_iterator(data, params, shuffle=False):
         random.shuffle(order)
 
     for i in range((data['size']+1)//params.batch_size):
-        batch_data = data['data'][order[0*params.batch_size:(1)*params.batch_size]]
-        batch_labels = data['labels'][order[0*params.batch_size:(1)*params.batch_size]]
+        batch_data = data['data'][order[i*params.batch_size:(i+1)*params.batch_size]]
+        batch_labels = data['labels'][order[i*params.batch_size:(i+1)*params.batch_size]]
         
         if params.cuda:
             batch_data, batch_labels = batch_data.cuda(), batch_labels.cuda()
