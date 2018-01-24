@@ -9,7 +9,7 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('--min_count_word', default=1, help="Minimum count for words in the dataset")
 parser.add_argument('--min_count_tag', default=1, help="Minimum count for tags in the dataset")
-parser.add_argument('--data_dir', default='data/NER', help="Directory containing the dataset")
+parser.add_argument('--data_dir', default='data/small', help="Directory containing the dataset")
 
 
 def save_vocab_to_txt_file(vocab, txt_path):
