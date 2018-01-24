@@ -1,20 +1,24 @@
-"""Utility functions for training"""
+"""Tensorflow utility functions for training"""
 
+import logging
 import os
 
-import tensorflow as tf
 from tqdm import trange
+import tensorflow as tf
+
+from model.utils import save_dict_to_json
+from model.evaluation import evaluate_sess
 
 
-def train(sess, model_spec, params, num_steps, writer):
+def train_sess(sess, model_spec, num_steps, writer, params):
     """Train the model on `num_steps` batches
 
     Args:
         sess: (tf.Session) current session
         model_spec: (dict) contains the graph operations or nodes needed for training
-        params: (Params) hyperparameters
         num_steps: (int) train for this number of batches
         writer: (tf.summary.FileWriter) writer for summaries
+        params: (Params) hyperparameters
     """
     # Get relevant graph operations or nodes needed for training
     loss = model_spec['loss']
@@ -59,23 +63,22 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         model_dir: (string) directory containing config, weights and log
         params: (Params) contains hyperparameters of the model.
                 Must define: num_epochs, train_size, batch_size, eval_size, save_summary_steps
-        restore_from: (string) directory or file containing the weights to be loaded
-                      If None, starts training from scratch.
+        restore_from: (string) directory or file containing weights to restore the graph
     """
-    # initialize tf.Saver instances to save weights during training
+    # Initialize tf.Saver instances to save weights during training
     last_saver = tf.train.Saver() # will keep last 5 epochs
     best_saver = tf.train.Saver(max_to_keep=1)  # only keep 1 best checkpoint (best on eval)
 
     with tf.Session() as sess:
-        # reload weights from directory if specified
+        # Initialize model variables
+        sess.run(train_model_spec['variable_init_op'])
+
+        # Reload weights from directory if specified
         if restore_from is not None:
             logging.info("Restoring parameters from {}".format(restore_from))
             if os.path.isdir(restore_from):
                 restore_from = tf.train.latest_checkpoint(restore_from)
             last_saver.restore(sess, restore_from)
-        else:
-            # Initialize model variables
-            sess.run(train_model_spec['variable_init_op'])
 
         # For tensorboard (takes care of writing summaries to files)
         train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train_summaries'), sess.graph)
@@ -86,9 +89,9 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         for epoch in range(params.num_epochs):
             # Run one epoch
             logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
-            # compute number of batches in one epoch (one full pass over the training set)
+            # Compute number of batches in one epoch (one full pass over the training set)
             num_steps = (params.train_size + 1) // params.batch_size
-            train(sess, train_model_spec, params, num_steps, train_writer)
+            train_sess(sess, train_model_spec, num_steps, train_writer, params)
 
             # Save weights
             last_save_path = os.path.join(model_dir, 'last_weights', 'after-epoch')
@@ -96,11 +99,11 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
 
             # Evaluate for one epoch on validation set
             num_steps = (params.eval_size + 1) // params.batch_size
-            metrics = evaluate(sess, eval_model_spec, num_steps, eval_writer)
+            metrics = evaluate_sess(sess, eval_model_spec, num_steps, eval_writer)
 
-            # If we find the best accuracy, we save it the weights to 'best_weights'
+            # If best_eval, best_save_path
             eval_acc = metrics['accuracy']
-            if eval_acc > best_eval_acc:
+            if eval_acc >= best_eval_acc:
                 # Store new best accuracy
                 best_eval_acc = eval_acc
                 # Save weights

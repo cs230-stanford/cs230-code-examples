@@ -1,4 +1,4 @@
-"""Train the model"""
+"""Evaluate the model"""
 
 import argparse
 import logging
@@ -18,8 +18,8 @@ parser.add_argument('--model_dir', default='experiments/test',
                     help="Experiment directory containing params.json")
 parser.add_argument('--data_dir', default='data/SIGNS',
                     help="Directory containing the dataset")
-parser.add_argument('--restore_dir', default='best_weights',
-                    help="Subdirectory of model dir containing the weights")
+parser.add_argument('--restore_from', default='best_weights',
+                    help="Subdirectory of model dir or file containing the weights")
 
 
 if __name__ == '__main__':
@@ -67,5 +67,5 @@ if __name__ == '__main__':
         # Evaluate
         num_steps = (test_size + 1) // params.batch_size
         metrics = evaluate(sess, test_model_spec, num_steps, None)
-        save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_dir))
+        save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_from))
         save_dict_to_json(metrics, save_path)

@@ -1,9 +1,15 @@
-"""Utility function to perform evaluation."""
+"""Tensorflow utility functions for evaluation"""
 
+import logging
+import os
+
+from tqdm import trange
 import tensorflow as tf
 
+from model.utils import save_dict_to_json
 
-def evaluate(sess, model_spec, num_steps, writer=None):
+
+def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     """Train the model on `num_steps` batches.
 
     Args:
@@ -11,6 +17,7 @@ def evaluate(sess, model_spec, num_steps, writer=None):
         model_spec: (dict) contains the graph operations or nodes needed for training
         num_steps: (int) train for this number of batches
         writer: (tf.summary.FileWriter) writer for summaries. Is None if we don't log anything
+        params: (Params) hyperparameters
     """
     update_metrics = model_spec['update_metrics']
     eval_metrics = model_spec['metrics']
@@ -38,3 +45,34 @@ def evaluate(sess, model_spec, num_steps, writer=None):
             writer.add_summary(summ, global_step_val)
 
     return metrics_val
+
+
+def evaluate(model_spec, model_dir, params, restore_from):
+    """Evaluate the model
+
+    Args:
+        model_spec: (dict) contains the graph operations or nodes needed for evaluation
+        model_dir: (string) directory containing config, weights and log
+        params: (Params) contains hyperparameters of the model.
+                Must define: num_epochs, train_size, batch_size, eval_size, save_summary_steps
+        restore_from: (string) directory or file containing weights to restore the graph
+    """
+    # Initialize tf.Saver
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        # Initialize the lookup table
+        sess.run(model_spec['variable_init_op'])
+
+        # Reload weights from the weights subdirectory
+        save_path = os.path.join(model_dir, restore_from)
+        if os.path.isdir(save_path):
+            save_path = tf.train.latest_checkpoint(save_path)
+        saver.restore(sess, save_path)
+
+        # Evaluate
+        num_steps = (params.test_size + 1) // params.batch_size
+        metrics = evaluate_sess(sess, model_spec, num_steps)
+        metrics_name = '_'.join(restore_from.split('/'))
+        save_path = os.path.join(model_dir, "metrics_test_{}.json".format(metrics_name))
+        save_dict_to_json(metrics, save_path)
