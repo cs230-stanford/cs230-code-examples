@@ -55,7 +55,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
     with tf.variable_scope('model', reuse=reuse):
-        # compute the output distribution of the model and the predictions
+        # Compute the output distribution of the model and the predictions
         logits = build_model(mode, inputs, params)
         predictions = tf.argmax(logits, -1)
 
