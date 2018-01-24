@@ -41,7 +41,7 @@ def train_preprocess(image, label):
     return image, label
 
 
-def input_fn(is_training, filenames, params):
+def input_fn(is_training, filenames, labels, params):
     """Input function for the SIGNS dataset.
 
     The filenames have format "{label}_IMG_{id}.jpg".
@@ -51,11 +51,11 @@ def input_fn(is_training, filenames, params):
         is_training: (bool) whether to use the train or test pipeline.
                      At training, we shuffle the data and have multiple epochs
         filenames: (list) filenames of the images, as ["data_dir/{label}_IMG_{id}.jpg"...]
+        labels: (list) corresponding list of labels
         params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
     """
     num_samples = len(filenames)
-    # Labels will be between 0 and 5 included (6 classes in total)
-    labels = [int(filename.split('/')[-1][0]) for filename in filenames]
+    assert len(filenames) == len(labels), "Filenames and labels should have same length"
 
     # Create a Dataset serving batches of images and labels
     # We don't repeat for multiple epochs because we always train and evaluate for one epoch

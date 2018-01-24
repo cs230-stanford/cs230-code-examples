@@ -4,7 +4,7 @@ import argparse
 import os
 from subprocess import check_call
 
-from utils.general import Params
+from model.utils import Params
 
 
 PYTHON = "python3"

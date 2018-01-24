@@ -112,7 +112,6 @@ def model_fn(mode, inputs, params, reuse=False):
     #TODO: if mode == 'eval': ?
     # Add incorrectly labeled images
     mask = tf.not_equal(labels, predictions)
-    incorrect_images = tf.boolean_mask(inputs['images'], mask)
 
     # Add a different summary to know how they were misclassified
     for label in range(0, 6):
