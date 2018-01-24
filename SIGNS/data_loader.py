@@ -8,9 +8,7 @@ from torch.autograd import Variable
 import torchvision.transforms as transforms
 
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
-loader = transforms.Compose([
-    transforms.Scale(224),   # scale imported image
-    transforms.ToTensor()])  # transform it into a torch tensor    
+loader = transforms.ToTensor()  # transform it into a torch tensor    
     
 def image_loader(filename):
     print(filename)
@@ -35,6 +33,7 @@ def load_data(types, data_dir):
     test_data_dir = os.path.join(data_dir, "test_signs")
     filenames = os.listdir(train_data_dir)
     filenames = [os.path.join(train_data_dir, f) for f in filenames]
+    
     
     random.seed(230)
     random.shuffle(filenames)
@@ -80,7 +79,6 @@ def data_iterator(data, params, shuffle=False):
         batch_data = data['data'][order[i*params.batch_size:(i+1)*params.batch_size]]
         batch_labels = data['labels'][order[i*params.batch_size:(i+1)*params.batch_size]]
 
-        batch_data, batch_labels = torch.from_numpy(batch_data), torch.from_numpy(batch_labels)
         if params.cuda:
             batch_data, batch_labels = batch_data.cuda(), batch_labels.cuda()
         batch_data, batch_labels = Variable(batch_data), Variable(batch_labels)
