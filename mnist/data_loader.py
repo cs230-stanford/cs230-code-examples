@@ -6,9 +6,9 @@ from torch.autograd import Variable
 
 from tensorflow.examples.tutorials.mnist import input_data
 
-def load_data(types):
+def load_data(types, data_dir):
     data = {}
-    mnist = input_data.read_data_sets('mnist/data/MNIST', one_hot=False)
+    mnist = input_data.read_data_sets(data_dir, one_hot=False)
     
     if 'train' in types:
         train_images = mnist.train.images[:40000]

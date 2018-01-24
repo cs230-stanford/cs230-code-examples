@@ -21,7 +21,7 @@ if __name__ == "__main__":
     test_data_dir = os.path.join(args.data_dir, "test_signs")    
     
     filenames = os.listdir(train_data_dir)
-    filenames = [os.path.join(train_data_dir, f) for f in filenames]
+    filenames = [os.path.join(train_data_dir, f) for f in filenames if 'DS_Store' not in f]
     
     random.seed(230)
     random.shuffle(filenames)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     split = int(0.9 * len(filenames))
     train_filenames = filenames[:split]
     val_filenames = filenames[split:]
-    test_filenames = [os.path.join(test_data_dir,f) for f in os.listdir(test_data_dir)]
+    test_filenames = [os.path.join(test_data_dir,f) for f in os.listdir(test_data_dir) if 'DS_Store' not in f]
     
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
@@ -55,5 +55,5 @@ if __name__ == "__main__":
     for filename in test_filenames:
         resize_and_save(filename, os.path.join(args.output_dir, "test_signs"))
         
-        
+    print("-- DONE!")
     

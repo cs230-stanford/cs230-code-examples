@@ -16,12 +16,13 @@ from tqdm import trange
 import utils
 import SIGNS.net as net
 import SIGNS.data_loader as data_loader
-from evaluate_pt import evaluate
+from evaluate import evaluate
 import pdb
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='signs/data')
+parser.add_argument('--data_dir', default='signs/preprocessed_data')
+#parser.add_argument('--data_dir',  default='mnist/data/MNIST')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default=None)
 
@@ -57,7 +58,7 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps, 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
+
         # Evaluate summaries only once in a while        
         if i % params.save_summary_steps == 0:
             summary_batch = {metric:metrics[metric](output_batch.data.cpu().numpy(), labels_batch.data.cpu().numpy())
@@ -156,7 +157,7 @@ if __name__ == '__main__':
     data = data_loader.load_data(['train', 'val'], args.data_dir)
     train_data = data['train']
     val_data = data['val']
-    pdb.set_trace()
+
     # specify the train and val datasets size
     params.train_size = train_data['size']
     params.val_size = val_data['size']
