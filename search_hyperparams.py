@@ -4,8 +4,6 @@ import argparse
 import os
 from subprocess import check_call
 
-import numpy as np
-
 from model.utils import Params
 
 
@@ -38,19 +36,19 @@ def launch_training_job(parent_dir, job_name, params):
 
 
 if __name__ == "__main__":
-    # load the "reference" parameters from parent_dir json file
+    # Load the "reference" parameters from parent_dir json file
     args = parser.parse_args()
     json_path = os.path.join(args.parent_dir, 'params.json')
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
-    # perform hypersearch over one parameter
+    # Perform hypersearch over one parameter
     learning_rates = [1e-4, 1e-3, 1e-2]
 
     for learning_rate in learning_rates:
-        # modify the relevant parameter in params
+        # Modify the relevant parameter in params
         params.learning_rate = learning_rate
 
-        # launch job (name has to be unique)
+        # Launch job (name has to be unique)
         job_name = "learning_rate_{}".format(learning_rate)
         launch_training_job(args.parent_dir, job_name, params)

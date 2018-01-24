@@ -1,7 +1,6 @@
-"""Train the model"""
+"""Evaluate the model"""
 
 import argparse
-import json
 import logging
 import os
 
@@ -21,8 +20,8 @@ parser.add_argument('--model_dir', default='experiments/test',
                     help="Directory containing params.json")
 parser.add_argument('--data_dir', default='data/NER',
                     help="Directory containing the dataset")
-parser.add_argument('--restore_dir', default='best_weights',
-                    help="Subdirectory of model dir containing the weights")
+parser.add_argument('--restore_from', default='best_weights',
+                    help="Subdirectory of model dir or file containing the weights")
 
 if __name__ == '__main__':
     # Set the random seed for the whole graph
@@ -73,4 +72,4 @@ if __name__ == '__main__':
     logging.info("- done.")
 
     logging.info("Starting evaluation")
-    evaluate(model_spec, args.model_dir, params, args.restore_dir)
+    evaluate(model_spec, args.model_dir, params, args.restore_from)
