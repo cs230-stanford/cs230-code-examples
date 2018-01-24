@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 import pdb
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 loader = transforms.Compose([
-#   transforms.Scale(64),
+    transforms.Scale(64),
     transforms.ToTensor()])  # transform it into a torch tensor    
     
 def image_loader(filename):
@@ -41,7 +41,7 @@ def load_data(types, data_dir):
         train_labels = [int(filename.split('/')[-1][0]) for filename in train_filenames]
         data['train'] = {}
         data['train']['data'] = train_images
-        data['train']['labels'] = torch.from_numpy(np.array(train_labels))
+        data['train']['labels'] = torch.LongTensor(train_labels)
         data['train']['size'] = train_images.shape[0]
     
     if 'val' in types:
@@ -51,7 +51,7 @@ def load_data(types, data_dir):
         val_labels = [int(filename.split('/')[-1][0]) for filename in val_filenames]
         data['val'] = {}
         data['val']['data'] = val_images
-        data['val']['labels'] = torch.from_numpy(np.array(val_labels))
+        data['val']['labels'] = torch.LongTensor(val_labels)
         data['val']['size'] = val_images.shape[0]
     
     if 'test' in types:
@@ -61,7 +61,7 @@ def load_data(types, data_dir):
         test_labels = [int(filename.split('/')[-1][0]) for filename in test_filenames]
         data['test'] = {}
         data['test']['data'] = test_images
-        data['test']['labels'] = torch.from_numpy(np.array(test_labels))
+        data['test']['labels'] = torch.LongTensor(test_labels)
         data['test']['size'] = test_images.shape[0]
     
     return data

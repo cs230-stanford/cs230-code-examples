@@ -19,14 +19,10 @@ class Net(nn.Module):
         self.bn2 = nn.BatchNorm2d(self.num_channels*2)
         self.conv3 = nn.Conv2d(self.num_channels*2, self.num_channels*4, 3, stride=1, padding=1)
         self.bn3 = nn.BatchNorm2d(self.num_channels*4)
-        self.conv4 = nn.Conv2d(self.num_channels*4, self.num_channels*8, 3, stride=1, padding=1)
-        self.bn4 = nn.BatchNorm2d(self.num_channels*8)
-        self.conv5 = nn.Conv2d(self.num_channels*8, self.num_channels*16, 3, stride=1, padding=1)
-        self.bn5 = nn.BatchNorm2d(self.num_channels*16)
 
-        self.fc1 = nn.Linear(7*7*self.num_channels*16, self.num_channels*16)        
-        self.fcbn1 = nn.BatchNorm1d(self.num_channels*16)
-        self.fc2 = nn.Linear(self.num_channels*16, 6)       
+        self.fc1 = nn.Linear(8*8*self.num_channels*4, self.num_channels*4)
+        self.fcbn1 = nn.BatchNorm1d(self.num_channels*4)
+        self.fc2 = nn.Linear(self.num_channels*4, 6)       
         self.dropout_rate = params.dropout_rate
 
     def forward(self, s):
@@ -37,11 +33,7 @@ class Net(nn.Module):
         s = F.relu(F.max_pool2d(s,2))                       # batch_size x num_channels*2 x 56 x 56
         s = self.bn3(self.conv3(s))                         # batch_size x num_channels*4 x 56 x 56
         s = F.relu(F.max_pool2d(s,2))                       # batch_size x num_channels*4 x 28 x 28
-        s = self.bn4(self.conv4(s))                         # batch_size x num_channels*8 x 28 x 28
-        s = F.relu(F.max_pool2d(s,2))                       # batch_size x num_channels*8 x 14 x 14
-        s = self.bn5(self.conv5(s))                         # batch_size x num_channels*16 x 14 x 14
-        s = F.relu(F.max_pool2d(s,2))                       # batch_size x num_channels*16 x 7 x 7                
-        s = s.view(-1, 7*7*self.num_channels*16)            # batch_size x 7*7*num_channels*16
+        s = s.view(-1, 8*8*self.num_channels*4)            # batch_size x 7*7*num_channels*16
 
         s = F.dropout(F.relu(self.fcbn1(self.fc1(s))), 
             p=self.dropout_rate, training=self.training)    # batch_size x self.num_channels*16

@@ -3,6 +3,7 @@ import random
 import os
 
 from PIL import Image
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='SIGNS/data')
@@ -12,9 +13,13 @@ def resize_and_save(filename, output_dir, size=64):
     image = Image.open(filename)
     image = image.resize((size,size))
     image.save(os.path.join(output_dir, filename.split('/')[-1]))
-
-if __name__ == "__main__":
     
+def make_directory(dir_name, folder_name):
+    path = os.path.join(dir_name, folder_name)
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+if __name__ == "__main__":    
     args = parser.parse_args()
     
     train_data_dir = os.path.join(args.data_dir, "train_signs")
@@ -35,24 +40,21 @@ if __name__ == "__main__":
         os.mkdir(args.output_dir)
     
     # preprocess train
-    if not os.path.exists(os.path.join(args.output_dir, "train_signs")):
-        os.mkdir(os.path.join(args.output_dir, "train_signs"))
+    make_directory(args.output_dir, "train_signs")
     print("-- Processing training data, saving preprocessed data to :" + os.path.join(args.output_dir, "train_signs"))
-    for filename in train_filenames:
+    for filename in tqdm(train_filenames):
         resize_and_save(filename, os.path.join(args.output_dir, "train_signs"))
     
     # preprocess val
     print("-- Processing validation data, saving preprocessed data to :" + os.path.join(args.output_dir, "val_signs"))
-    if not os.path.exists(os.path.join(args.output_dir, "val_signs")):
-        os.mkdir(os.path.join(args.output_dir, "val_signs"))
-    for filename in val_filenames:
+    make_directory(args.output_dir, "val_signs")
+    for filename in tqdm(val_filenames):
         resize_and_save(filename, os.path.join(args.output_dir, "val_signs"))
     
     # preprocess test
     print("-- Processing testing data, saving preprocessed data to :" + os.path.join(args.output_dir, "test_signs"))
-    if not os.path.exists(os.path.join(args.output_dir, "test_signs")):
-        os.mkdir(os.path.join(args.output_dir, "test_signs"))
-    for filename in test_filenames:
+    make_directory(args.output_dir, "test_signs")
+    for filename in tqdm(test_filenames):
         resize_and_save(filename, os.path.join(args.output_dir, "test_signs"))
         
     print("-- DONE!")
