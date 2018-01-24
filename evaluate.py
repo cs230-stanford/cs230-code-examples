@@ -13,10 +13,11 @@ import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import trange
 import utils
-import mnist.net as net
-import mnist.dataloader as dataloader
+import SIGNS.net as net
+import SIGNS.data_loader as dataloader
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--data_dir', default='signs/preprocessed_data')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default='best') # subdir of model_dir with weights
 
@@ -57,29 +58,29 @@ def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
 
 
 if __name__ == '__main__':
-    # Set the random seed for the whole graph
-    torch.manual_seed(230)
-    if params.cuda:
-        torch.cuda.manual_seed(230)        
-
     # TODO: use case where we just evaluate one model_dir
     # Load the parameters
     args = parser.parse_args()
     json_path = os.path.join(args.model_dir, 'params.json')
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
-    params = Params(json_path)
-
+    params = utils.Params(json_path)
+    
+    # Set the random seed for the whole graph
+    torch.manual_seed(230)
+    if params.cuda:
+        torch.cuda.manual_seed(230)
+        
     # Get the logger
     utils.set_logger(os.path.join(args.model_dir, 'evaluate.log'))
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    data = dataloader.load_data(['test'])
+    data = dataloader.load_data(['test'], args.data_dir)
     test_data = data['test']
 
     # specify the test set size
     params.test_size = test_data['size']
-    test_data_iterator = dataloader.data_iterator(test_data)
+    test_data_iterator = dataloader.data_iterator(test_data, params)
 
     logging.info("- done.")
 
@@ -92,10 +93,10 @@ if __name__ == '__main__':
     logging.info("Starting evaluation")
 
     # Reload weights from the saved file
-    utils.load_checkpoint(restore_file, model)
+    utils.load_checkpoint(args.restore_file, model)
 
     # Evaluate
     num_steps = (params.test_size + 1) // params.batch_size
     test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, params, num_steps)
-    save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_dir))
-    save_dict_to_json(metrics, save_path)
+    save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_file))  # TODO: fix this
+    utils.save_dict_to_json(metrics, save_path)

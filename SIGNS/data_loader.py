@@ -8,7 +8,9 @@ from torch.autograd import Variable
 import torchvision.transforms as transforms
 import pdb
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
-loader = transforms.ToTensor()  # transform it into a torch tensor    
+loader = transforms.Compose([
+#   transforms.Scale(64),
+    transforms.ToTensor()])  # transform it into a torch tensor    
     
 def image_loader(filename):
     image = Image.open(filename)

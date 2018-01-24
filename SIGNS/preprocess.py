@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='SIGNS/data')
 parser.add_argument('--output_dir', default='SIGNS/preprocessed_data')
 
-def resize_and_save(filename, output_dir, size=224):
+def resize_and_save(filename, output_dir, size=64):
     image = Image.open(filename)
     image = image.resize((size,size))
     image.save(os.path.join(output_dir, filename.split('/')[-1]))
