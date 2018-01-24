@@ -2,7 +2,8 @@
     "learning_rate": 1e-3,
     "dropout_rate":0.8,
     "batch_size": 16,
-    "num_epochs": 10,
+    "num_epochs": 20,
+    "num_channels": 8,
     "cuda": 0,
     "model_version": "2_fc",
 
