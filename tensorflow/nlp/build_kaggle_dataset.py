@@ -6,9 +6,12 @@ import os
 
 def load_dataset(path_csv):
     """Loads dataset into memory from csv file"""
-    # Open csv file with mac_roman encoding to solve python3 issues
-    with open(path_csv, encoding="mac_roman") as f:
-        csv_file = csv.reader(f, delimiter=',')
+    def to_str(f):
+        # Read file in bytes, need to cast to str for python3
+        for l in f: yield str(l)
+
+    with open(path_csv, 'rb') as f:
+        csv_file = csv.reader(to_str(f), delimiter=',')
         dataset = []
         words, tags = [], []
         # Each line of the csv corresponds to one word
