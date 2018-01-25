@@ -86,8 +86,8 @@ if __name__ == '__main__':
     tags = [tok for tok, count in tags.items() if count >= args.min_count_tag]
 
     # Add pad tokens
-    words.append(PAD_WORD)
-    tags.append(PAD_TAG)
+    if PAD_WORD not in words: words.append(PAD_WORD)
+    if PAD_TAG not in tags: tags.append(PAD_TAG)
 
     # Save vocabularies to file
     print("Saving vocabularies to file...")
