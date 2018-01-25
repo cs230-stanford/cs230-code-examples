@@ -6,11 +6,11 @@ import os
 
 import tensorflow as tf
 
-from model.input_data import input_fn
+from model.input_fn import input_fn
+from model.model_fn import model_fn
+from model.evaluation import evaluate
 from model.utils import Params
 from model.utils import set_logger
-from model.utils import save_dict_to_json
-from model.model import model_fn
 
 
 parser = argparse.ArgumentParser()
@@ -42,29 +42,19 @@ if __name__ == '__main__':
 
     # Get the filenames from the test set
     test_filenames = os.listdir(test_data_dir)
-    test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames]
+    test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames if f.endswith('.jpg')]
 
-    # specify the test set size
-    test_size = len(test_filenames)
+    test_labels = [int(f.split('/')[-1][0]) for f in test_filenames]
+
+    # specify the size of the evaluation set
+    params.eval_size = len(test_filenames)
 
     # create the iterator over the dataset
-    test_inputs = input_fn(False, test_filenames, params)
+    test_inputs = input_fn(False, test_filenames, test_labels, params)
 
     # Define the model
     logging.info("Creating the model...")
-    test_model_spec = model_fn('eval', test_inputs, params, reuse=False)
+    model_spec = model_fn('eval', test_inputs, params, reuse=False)
 
     logging.info("Starting evaluation")
-    saver = tf.train.Saver()
-
-    with tf.Session() as sess:
-        # Reload weights from the weights_dir subdirectory
-        save_dir = os.path.join(args.model_dir, args.restore_dir)
-        save_path = tf.train.latest_checkpoint(save_dir)
-        saver.restore(sess, save_path)
-
-        # Evaluate
-        num_steps = (test_size + 1) // params.batch_size
-        metrics = evaluate(sess, test_model_spec, num_steps, None)
-        save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_from))
-        save_dict_to_json(metrics, save_path)
+    evaluate(model_spec, args.model_dir, params, args.restore_from)

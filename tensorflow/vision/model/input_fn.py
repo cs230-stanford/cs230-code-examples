@@ -18,7 +18,9 @@ def _parse_function(filename, label):
     # This will convert to float values in [0, 1]
     image = tf.image.convert_image_dtype(image_decoded, tf.float32)
 
-    return image, label
+    resized_image = tf.image.resize_images(image, [64, 64])
+
+    return resized_image, label
 
 
 def train_preprocess(image, label):

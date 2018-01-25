@@ -41,25 +41,19 @@ if __name__ == '__main__':
     logging.info("Creating the datasets...")
     data_dir = args.data_dir
     train_data_dir = os.path.join(data_dir, "train_signs")
+    dev_data_dir = os.path.join(data_dir, "dev_signs")
 
-    # Get the filenames and shuffle them
-    # We will take 10% of the training set as development set
-    filenames = os.listdir(train_data_dir)
-    filenames = [os.path.join(train_data_dir, f) for f in filenames]
-    random.seed(230)  # Make sure to always have the same dev set (through having the same shuffle)
-    # TODO: sort(filenames)
-    random.shuffle(filenames)
+    # Get the filenames from the train and dev sets
+    train_filenames = [os.path.join(train_data_dir, f) for f in os.listdir(train_data_dir)
+                       if f.endswith('.jpg')]
+    eval_filenames = [os.path.join(dev_data_dir, f) for f in os.listdir(dev_data_dir)
+                      if f.endswith('.jpg')]
 
     # Labels will be between 0 and 5 included (6 classes in total)
-    labels = [int(filename.split('/')[-1][0]) for filename in filenames]
+    train_labels = [int(f.split('/')[-1][0]) for f in train_filenames]
+    eval_labels = [int(f.split('/')[-1][0]) for f in eval_filenames]
 
-    split = int(0.9 * len(filenames))
-    train_filenames = filenames[:split]
-    train_labels = labels[:split]
-    eval_filenames = filenames[split:]
-    eval_labels = labels[split:]
-
-    # Specify the train and eval datasets size
+    # Specify the sizes of the dataset we train on and evaluate on
     params.train_size = len(train_filenames)
     params.eval_size = len(eval_filenames)
 
