@@ -1,6 +1,7 @@
 {
+    "cuda": false,
     "model_version": "lstm",
-    "lstm_num_units": 200,
+    "lstm_hidden_dim": 200,
     "embedding_size": 50,
 
     "learning_rate": 1e-3,

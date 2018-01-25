@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    data = data_loader.load_data(['test'], args.data_dir)
+    data = data_loader.load_data(['test'], args.data_dir, param)
     test_data = data['test']
 
     # specify the test set size

@@ -22,7 +22,6 @@ import pdb
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='preprocessed_data')
-#parser.add_argument('--data_dir',  default='mnist/data/MNIST')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default=None)
 
@@ -154,7 +153,7 @@ if __name__ == '__main__':
     logging.info("Loading the datasets...")
     
     # load data
-    data = data_loader.load_data(['train', 'val'], args.data_dir)
+    data = data_loader.load_data(['train', 'val'], args.data_dir, params)
     train_data = data['train']
     val_data = data['val']
 

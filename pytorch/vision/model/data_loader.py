@@ -29,7 +29,7 @@ def load_set(filenames):
     images = torch.cat(images)
     return images
         
-def load_data(types, data_dir):
+def load_data(types, data_dir, params):
     data = {}
     
     train_data_dir = os.path.join(data_dir, "train_signs")

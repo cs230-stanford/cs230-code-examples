@@ -1,4 +1,5 @@
 {
+    "cuda": false,
     "model_version": "lstm",
     "lstm_num_units": 200,
     "embedding_size": 50,
