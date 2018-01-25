@@ -4,6 +4,7 @@ import argparse
 from collections import Counter
 import json
 import os
+import sys
 
 
 parser = argparse.ArgumentParser()
@@ -55,6 +56,7 @@ def update_vocab(txt_path, vocab):
     with open(txt_path) as f:
         for i, line in enumerate(f):
             vocab.update(line.strip().split(' '))
+
 
     return i + 1
 
