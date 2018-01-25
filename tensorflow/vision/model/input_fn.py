@@ -9,7 +9,6 @@ def _parse_function(filename, label):
     The following operations are applied:
         - Decode the image from jpeg format
         - Convert to float and to range [0, 1]
-        - Resize the image to size (224, 224)
     """
     image_string = tf.read_file(filename)
 
@@ -19,8 +18,7 @@ def _parse_function(filename, label):
     # This will convert to float values in [0, 1]
     image = tf.image.convert_image_dtype(image_decoded, tf.float32)
 
-    resized_image = tf.image.resize_images(image, [224, 224])
-    return resized_image, label
+    return image, label
 
 
 def train_preprocess(image, label):

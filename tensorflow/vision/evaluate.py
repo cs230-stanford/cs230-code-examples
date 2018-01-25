@@ -16,7 +16,7 @@ from model.model import model_fn
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test',
                     help="Experiment directory containing params.json")
-parser.add_argument('--data_dir', default='data/SIGNS',
+parser.add_argument('--data_dir', default='data/64x64_SIGNS',
                     help="Directory containing the dataset")
 parser.add_argument('--restore_from', default='best_weights',
                     help="Subdirectory of model dir or file containing the weights")
@@ -26,7 +26,6 @@ if __name__ == '__main__':
     # Set the random seed for the whole graph
     tf.set_random_seed(230)
 
-    # TODO: use case where we just evaluate one model_dir
     # Load the parameters
     args = parser.parse_args()
     json_path = os.path.join(args.model_dir, 'params.json')
