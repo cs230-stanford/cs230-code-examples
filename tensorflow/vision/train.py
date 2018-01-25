@@ -18,7 +18,7 @@ from model.training import train_and_evaluate
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test',
                     help="Experiment directory containing params.json")
-parser.add_argument('--data_dir', default='../../SIGNS/preprocessed_data/',
+parser.add_argument('--data_dir', default='data/SIGNS',
                     help="Directory containing the dataset")
 parser.add_argument('--restore_from', default=None,
                     help="Optional, directory or file containing weights to reload before training")
@@ -41,23 +41,23 @@ if __name__ == '__main__':
     logging.info("Creating the datasets...")
     data_dir = args.data_dir
     train_data_dir = os.path.join(data_dir, "train_signs")
-    val_data_dir = os.path.join(data_dir, "val_signs")
+
     # Get the filenames and shuffle them
     # We will take 10% of the training set as development set
     filenames = os.listdir(train_data_dir)
-    train_filenames = [os.path.join(train_data_dir, f) for f in filenames if 'DS_Store' not in f]
+    filenames = [os.path.join(train_data_dir, f) for f in filenames]
     random.seed(230)  # Make sure to always have the same dev set (through having the same shuffle)
     # TODO: sort(filenames)
     random.shuffle(filenames)
 
     # Labels will be between 0 and 5 included (6 classes in total)
-    train_labels = [int(filename.split('/')[-1][0]) for filename in train_filenames]
-    val_filenames = [os.path.join(val_data_dir, f) for f in os.listdir(val_data_dir) if 'DS_Store' not in f]
-    val_labels = [int(filename.split('/')[-1][0]) for filename in val_filenames] 
-    train_filenames = train_filenames
-    
-    eval_filenames = val_filenames
-    eval_labels = val_labels
+    labels = [int(filename.split('/')[-1][0]) for filename in filenames]
+
+    split = int(0.9 * len(filenames))
+    train_filenames = filenames[:split]
+    train_labels = labels[:split]
+    eval_filenames = filenames[split:]
+    eval_labels = labels[split:]
 
     # Specify the train and eval datasets size
     params.train_size = len(train_filenames)
