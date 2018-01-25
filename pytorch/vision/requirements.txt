@@ -1,0 +1,3 @@
+pytorch>=0.3
+tabulate
+tqdm
