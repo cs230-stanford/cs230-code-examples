@@ -51,6 +51,7 @@ def model_fn(mode, inputs, params, reuse=False):
     """
     is_training = (mode == 'train')
     labels = inputs['labels']
+    sentence_lengths = inputs['sentence_lengths']
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
@@ -59,8 +60,11 @@ def model_fn(mode, inputs, params, reuse=False):
         logits = build_model(mode, inputs, params)
         predictions = tf.argmax(logits, -1)
 
-    # Define loss and accuracy
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
+    # Define loss and accuracy (we need to apply a mask to account for padding)
+    losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
+    mask = tf.sequence_mask(sentence_lengths)
+    losses = tf.boolean_mask(losses, mask)
+    loss = tf.reduce_mean(losses)
     accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
 
     # Define training step that minimizes the loss with the Adam optimizer
