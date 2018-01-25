@@ -1,11 +1,11 @@
 {
     "cuda": false,
-    "model_version": "lstm",
-    "lstm_hidden_dim": 200,
-    "embedding_size": 50,
+    
+    "lstm_hidden_dim": 50,
+    "embedding_dim": 50,
 
     "learning_rate": 1e-3,
-    "batch_size": 5,
+    "batch_size": 32,
     "num_epochs": 10,
     "dropout_rate": 0.3,
 
