@@ -6,8 +6,8 @@ from PIL import Image
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='SIGNS/data')
-parser.add_argument('--output_dir', default='SIGNS/preprocessed_data')
+parser.add_argument('--data_dir', default='data')
+parser.add_argument('--output_dir', default='preprocessed_data')
 
 def resize_and_save(filename, output_dir, size=64):
     image = Image.open(filename)

@@ -14,14 +14,14 @@ from torch.autograd import Variable
 from tqdm import trange
 
 import utils
-import SIGNS.net as net
-import SIGNS.data_loader as data_loader
+import model.net as net
+import model.data_loader as data_loader
 from evaluate import evaluate
 import pdb
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='signs/preprocessed_data')
+parser.add_argument('--data_dir', default='preprocessed_data')
 #parser.add_argument('--data_dir',  default='mnist/data/MNIST')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default=None)

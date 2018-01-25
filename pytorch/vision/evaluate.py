@@ -13,8 +13,8 @@ import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import trange
 import utils
-import SIGNS.net as net
-import SIGNS.data_loader as dataloader
+import model.net as net
+import model.data_loader as data_loader
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='signs/preprocessed_data')
@@ -75,12 +75,12 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    data = dataloader.load_data(['test'], args.data_dir)
+    data = data_loader.load_data(['test'], args.data_dir)
     test_data = data['test']
 
     # specify the test set size
     params.test_size = test_data['size']
-    test_data_iterator = dataloader.data_iterator(test_data, params)
+    test_data_iterator = data_loader.data_iterator(test_data, params)
 
     logging.info("- done.")
 
