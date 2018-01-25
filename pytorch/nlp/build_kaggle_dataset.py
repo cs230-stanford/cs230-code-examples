@@ -2,35 +2,30 @@
 
 import csv
 import os
-import sys
 
 
 def load_dataset(path_csv):
     """Loads dataset into memory from csv file"""
-    # Open the csv file, need to specify the encoding for python3
-    use_python3 = sys.version_info[0] >= 3
-    with (open(path_csv, encoding="windows-1252") if use_python3 else open(path_csv)) as f:
-        csv_file = csv.reader(f, delimiter=',')
+    def to_str(f):
+        # Read file in bytes, need to cast to str for python3
+        for l in f: yield str(l)
+
+    with open(path_csv, 'rb') as f:
+        csv_file = csv.reader(to_str(f), delimiter=',')
         dataset = []
         words, tags = [], []
-
         # Each line of the csv corresponds to one word
         for idx, row in enumerate(csv_file):
             if idx == 0: continue
             sentence, word, pos, tag = row
             # If the first column is non empty it means we reached a new sentence
-            if len(sentence) != 0:
+            if sentence != "":
                 if len(words) > 0:
                     assert len(words) == len(tags)
                     dataset.append((words, tags))
                     words, tags = [], []
-            try:
-                word, tag = str(word), str(tag)
-                words.append(word)
-                tags.append(tag)
-            except UnicodeDecodeError as e:
-                print("An exception was raised, skipping a word: {}".format(e))
-                pass
+            words.append(word)
+            tags.append(tag)
 
     return dataset
 
@@ -67,12 +62,12 @@ if __name__ == "__main__":
     dataset = load_dataset(path_dataset)
     print("- done.")
 
-    # Split the dataset into train, dev and split (dummy split with no shuffle)
+    # Split the dataset into train, val and split (dummy split with no shuffle)
     train_dataset = dataset[:int(0.7*len(dataset))]
-    dev_dataset = dataset[int(0.7*len(dataset)) : int(0.85*len(dataset))]
+    val_dataset = dataset[int(0.7*len(dataset)) : int(0.85*len(dataset))]
     test_dataset = dataset[int(0.85*len(dataset)):]
 
     # Save the datasets to files
     save_dataset(train_dataset, 'data/kaggle/train')
-    save_dataset(dev_dataset, 'data/kaggle/dev')
+    save_dataset(val_dataset, 'data/kaggle/val')
     save_dataset(test_dataset, 'data/kaggle/test')

@@ -1,0 +1,10 @@
+B-per I-per O O O B-tim O O B-tim O O O B-geo O O O O O O O O O O
+O O O O B-gpe B-per I-per I-per O O B-org I-org I-org I-org I-org O O O O O O O O B-geo O O O O O O O O O
+O B-org I-org I-org O O O O O O O O
+B-gpe O O O O O O O B-gpe O O O O O O O O O O O O O O O O B-geo O
+O O O B-org I-org O O O O O B-geo O O O O B-org O O O O B-gpe O O O O O
+O O O B-per I-per I-per O O B-tim O B-gpe O O O O O O O B-gpe O O B-geo O O O O O O O O B-geo O
+B-org O O O O O O O O O O O O O O O O O O O O O O
+O B-tim O B-gpe O O O O O O O O O O O O O O O O O O B-org O O O
+O B-gpe O O O O O O O O O O O O O O O O O O B-org O B-org O
+B-geo O O O O O O O O O O O O O O O O O O O O O O O

@@ -15,13 +15,13 @@ from tqdm import trange
 
 import utils
 import model.net as net
-import model.data_loader as data_loader
+from model.data_loader import DataLoader
 from evaluate import evaluate
 import pdb
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='preprocessed_data')
+parser.add_argument('--data_dir', default='data/small')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default=None)
 
@@ -57,7 +57,7 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps, 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-                
+
         # Evaluate summaries only once in a while        
         output_batch = output_batch.data.cpu().numpy()
         labels_batch = labels_batch.data.cpu().numpy()
@@ -70,8 +70,8 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps, 
         t.set_postfix(loss='{:05.3f}'.format(loss.data[0]))
 
     # compute mean of all metrics in summary
-    metrics_mean = {metric:np.mean([x[metric] for x in summ]) for metric in summ[0]} 
-    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_mean.items())
+    metrics_mean = {metric:np.mean([x[metric] for x in summ], axis=0) for metric in summ[0]} 
+    metrics_string = " ; ".join("{}: ".format(k) + str(v) for k, v in metrics_mean.items())
     logging.info("- Train metrics: " + metrics_string)
     summary.append(summ)
     
@@ -155,7 +155,8 @@ if __name__ == '__main__':
     logging.info("Loading the datasets...")
     
     # load data
-    data = data_loader.load_data(['train', 'val'], args.data_dir, params)
+    data_loader = DataLoader(args.data_dir, params)
+    data = data_loader.load_data(['train', 'val'], args.data_dir)
     train_data = data['train']
     val_data = data['val']
 
