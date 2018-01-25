@@ -92,3 +92,10 @@ python synthesize_results.py --parent_dir="experiments/learning_rate"
 ```
 python evaluate.py --data_dir="data/small" --model_dir="experiments/test"
 ```
+
+
+## Resources
+
+Tensorflow seq2seq using the tf.data pipeline:
+- [documentation](https://www.tensorflow.org/tutorials/seq2seq)
+- [github](https://github.com/tensorflow/nmt/)

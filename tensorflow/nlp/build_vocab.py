@@ -7,8 +7,10 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--min_count_word', default=1, help="Minimum count for words in the dataset")
-parser.add_argument('--min_count_tag', default=1, help="Minimum count for tags in the dataset")
+parser.add_argument('--min_count_word', default=1, help="Minimum count for words in the dataset",
+                    type=int)
+parser.add_argument('--min_count_tag', default=1, help="Minimum count for tags in the dataset",
+                    type=int)
 parser.add_argument('--data_dir', default='data/small', help="Directory containing the dataset")
 
 # Hyper parameters for the vocab
