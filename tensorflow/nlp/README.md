@@ -4,14 +4,7 @@ Note : all scripts must be run in `tensorflow/nlp`.
 
 ## Requirements
 
-We recommend using python3.
-
-__Pip install__ Install the python packages by running
-
-```
-pip install -r requirements.txt
-```
-
+We recommend using python3 and a virtual env.
 
 ## Task
 
@@ -46,7 +39,7 @@ It will extract the sentences and labels from the dataset, split it into train /
 1. __Build__ vocabularies and parameters for your dataset by running
 
 ```
-python build_dataset.py --data_dir="data/small"
+python build_vocab.py --data_dir="data/small"
 ```
 
 It will write vocabulary files `words.txt` and `tags.txt` containing the words and tags in the dataset. It will also save a `dataset_params.json` with some extra information.
