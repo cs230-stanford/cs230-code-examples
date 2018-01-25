@@ -36,7 +36,6 @@ def input_fn(mode, sentences, labels, params):
         params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
 
     """
-    # TODO: num_parallel_calls ?
     # Load all the dataset in memory for shuffling is training
     is_training = (mode == 'train')
     buffer_size = params.buffer_size if is_training else 1
@@ -52,8 +51,8 @@ def input_fn(mode, sentences, labels, params):
                       params.id_pad_tag)     # labels padded on the right with id_pad_tag
 
     dataset = (dataset
-        .padded_batch(params.batch_size, padded_shapes=padded_shapes, padding_values=padding_values)
         .shuffle(buffer_size=buffer_size)
+        .padded_batch(params.batch_size, padded_shapes=padded_shapes, padding_values=padding_values)
         .prefetch(1)  # make sure you always have one batch ready to serve
     )
 
