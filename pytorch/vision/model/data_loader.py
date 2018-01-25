@@ -11,7 +11,7 @@ import pdb
 
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 loader = transforms.Compose([
-    transforms.Scale(64),
+    transforms.Resize(64),
     transforms.ToTensor()])  # transform it into a torch tensor    
     
 def image_loader(filename):
@@ -29,42 +29,20 @@ def load_set(filenames):
     images = torch.cat(images)
     return images
         
-def load_data(types, data_dir, params):
-    data = {}
+def load_data(types, data_dir):
+    data = {}    
     
-    train_data_dir = os.path.join(data_dir, "train_signs")
-    val_data_dir = os.path.join(data_dir, "val_signs")
-    test_data_dir = os.path.join(data_dir, "test_signs")
-    
-    if 'train' in types:
-        train_filenames = os.listdir(train_data_dir)
-        train_filenames = [os.path.join(train_data_dir, f) for f in train_filenames if 'DS_Store' not in f]
-        train_images = load_set(train_filenames)
-        train_labels = [int(filename.split('/')[-1][0]) for filename in train_filenames]
-        data['train'] = {}
-        data['train']['data'] = train_images
-        data['train']['labels'] = torch.LongTensor(train_labels)
-        data['train']['size'] = train_images.shape[0]
-    
-    if 'val' in types:
-        val_filenames = os.listdir(val_data_dir)
-        val_filenames = [os.path.join(val_data_dir, f) for f in val_filenames if 'DS_Store' not in f]
-        val_images = load_set(val_filenames)
-        val_labels = [int(filename.split('/')[-1][0]) for filename in val_filenames]
-        data['val'] = {}
-        data['val']['data'] = val_images
-        data['val']['labels'] = torch.LongTensor(val_labels)
-        data['val']['size'] = val_images.shape[0]
-    
-    if 'test' in types:
-        test_filenames = os.listdir(test_data_dir)
-        test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames if 'DS_Store' not in f]
-        test_images = load_set(test_filenames)
-        test_labels = [int(filename.split('/')[-1][0]) for filename in test_filenames]
-        data['test'] = {}
-        data['test']['data'] = test_images
-        data['test']['labels'] = torch.LongTensor(test_labels)
-        data['test']['size'] = test_images.shape[0]
+    for split in ['train', 'val', 'test']:
+        if split in types:
+            path = os.path.join(data_dir, "{}_signs".format(split))
+            filenames = os.listdir(path)
+            filenames = [os.path.join(path, f) for f in filenames if f.endswith('.jpg')]
+            images = load_set(filenames)
+            labels = [int(filename.split('/')[-1][0]) for filename in filenames]
+            data[split] = {}
+            data[split]['data'] = images
+            data[split]['labels'] = torch.LongTensor(labels)
+            data[split]['size'] = images.shape[0]
     
     return data
     

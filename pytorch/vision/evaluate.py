@@ -17,7 +17,7 @@ import model.net as net
 import model.data_loader as data_loader
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='signs/preprocessed_data')
+parser.add_argument('--data_dir', default='preprocessed_data')
 parser.add_argument('--model_dir', default='experiments/test')
 parser.add_argument('--restore_file', default='best') # subdir of model_dir with weights
 
@@ -64,7 +64,8 @@ if __name__ == '__main__':
     json_path = os.path.join(args.model_dir, 'params.json')
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = utils.Params(json_path)
-    
+    params.cuda = torch.cuda.is_available()     # use GPU is available
+        
     # Set the random seed for the whole graph
     torch.manual_seed(230)
     if params.cuda:
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 
     # Create the input data pipeline
     logging.info("Creating the dataset...")
-    data = data_loader.load_data(['test'], args.data_dir, param)
+    data = data_loader.load_data(['test'], args.data_dir)
     test_data = data['test']
 
     # specify the test set size
@@ -93,10 +94,10 @@ if __name__ == '__main__':
     logging.info("Starting evaluation")
 
     # Reload weights from the saved file
-    utils.load_checkpoint(args.restore_file, model)
+    utils.load_checkpoint(os.path.join(args.model_dir, args.restore_file + '.pth.tar'), model)
 
     # Evaluate
     num_steps = (params.test_size + 1) // params.batch_size
     test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, params, num_steps)
     save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_file))  # TODO: fix this
-    utils.save_dict_to_json(metrics, save_path)
+    utils.save_dict_to_json(test_metrics, save_path)

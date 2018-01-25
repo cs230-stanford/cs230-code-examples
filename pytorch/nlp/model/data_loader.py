@@ -2,6 +2,7 @@ import random
 import numpy as np
 import json
 import os
+import sys
 
 import torch
 from torch.autograd import Variable
@@ -45,8 +46,9 @@ class DataLoader(object):
     def load_sentences_labels(self, sentences_file, labels_file, d):
         sentences = []
         labels = []
-
-        with open(sentences_file) as f:
+        
+        use_python3 = sys.version_info[0] >= 3
+        with open(sentences_file, encoding="windows-1252") if use_python3 else open(sentences_file) as f:
             for sentence in f.read().splitlines():
                 # replace each token by its index if it is in vocab
                 # else use index of UNK_WORD
@@ -72,28 +74,13 @@ class DataLoader(object):
     
     def load_data(self, types, data_dir):
         data = {}
-        print(data_dir)
-        train_data_dir = os.path.join(data_dir, "train/")
-        val_data_dir = os.path.join(data_dir, "val/")
-        test_data_dir = os.path.join(data_dir, "test/")
         
-        if 'train' in types:
-            train_sentences = os.path.join(train_data_dir, "sentences.txt")
-            train_labels = os.path.join(train_data_dir, "labels.txt")
-            data['train'] = {}
-            self.load_sentences_labels(train_sentences, train_labels, data['train'])
-        
-        if 'val' in types:
-            val_sentences = os.path.join(val_data_dir, "sentences.txt")
-            val_labels = os.path.join(val_data_dir, "labels.txt")
-            data['val'] = {}
-            self.load_sentences_labels(val_sentences, val_labels, data['val'])
-        
-        if 'test' in types:
-            test_sentences = os.path.join(test_data_dir, "sentences.txt")
-            test_labels = os.path.join(test_data_dir, "labels.txt")
-            data['test'] = {}
-            self.load_sentences_labels(test_sentences, test_labels, data['test'])
+        for split in ['train', 'val', 'test']:
+            if split in types:
+                sentences_file = os.path.join(data_dir, split, "sentences.txt")
+                labels_file = os.path.join(data_dir, split, "labels.txt")
+                data[split] = {}
+                self.load_sentences_labels(sentences_file, labels_file, data[split])
 
         return data
         
