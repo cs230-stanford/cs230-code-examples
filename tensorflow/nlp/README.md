@@ -1,6 +1,8 @@
 # Named Entity Recognition with Tensorflow
 
-Take the time to read the [Tutorials](https://cs230-stanford.github.io).
+*Authors: Guillaume Genthial and Olivier Moindrot*
+
+Take the time to read the [tutorials](https://cs230-stanford.github.io).
 
 Note : all scripts must be run in `tensorflow/nlp`.
 
@@ -114,4 +116,3 @@ Tensorflow seq2seq using the tf.data pipeline:
 - [github](https://github.com/tensorflow/nmt/)
 
 
-*Authors: Guillaume Genthial and Olivier Moindrot*

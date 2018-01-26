@@ -1,6 +1,8 @@
 # Hand Signs Recognition with Tensorflow
 
-*Author: Olivier Moindrot*
+*Authors: Olivier Moindrot and Guillaume Genthial*
+
+Take the time to read the [tutorials](https://cs230-stanford.github.io).
 
 Note: all scripts must be run in folder `tensorflow/vision`.
 
