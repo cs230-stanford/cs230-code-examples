@@ -13,7 +13,7 @@ class Net(nn.Module):
     on the input step-by-step in the forward function. You can use torch.nn.functional to apply functions
     such as F.relu, F.sigmoid, F.softmax. Be careful to ensure your dimensions are correct after each step.
 
-    You are encouraged to have a look at the network in ../vision/model/net.py to get a better sense of how
+    You are encouraged to have a look at the network in pytorch/vision/model/net.py to get a better sense of how
     you can go about defining your own network.
 
     The documentation for all the various components available to you is here: http://pytorch.org/docs/master/nn.html
@@ -21,7 +21,7 @@ class Net(nn.Module):
 
     def __init__(self, params):
         """
-        We define a simple LSTM network that predicts the NER tags for each token in the sentence. The components
+        We define an recurrent network that predicts the NER tags for each token in the sentence. The components
         required are:
 
         - an embedding layer: this layer maps each index in range(params.vocab_size) to a params.embedding_dim vector
@@ -48,14 +48,14 @@ class Net(nn.Module):
         This function defines how we use the components of our network to operate on an input batch.
 
         Args:
-            s: (Variable) containis a batch of sentences, of dimension batch_size x seq_len, where seq_len is
+            s: (Variable) contains a batch of sentences, of dimension batch_size x seq_len, where seq_len is
                the length of the longest sentence in the batch. For sentences shorter than seq_len, the remaining
                tokens are PADding tokens. Each row is a sentence with each element corresponding to the index of
                the token in the vocab.
 
         Returns:
-            out: (Variable) dimension batch_size*seq_len x num_tags with the output for each token for each
-                 sentence.
+            out: (Variable) dimension batch_size*seq_len x num_tags with the log probabilities of tokens for each token
+                 of each sentence.
 
         Note: the dimensions after each step are provided
         """
@@ -76,13 +76,14 @@ class Net(nn.Module):
         s = self.fc(s)                   # dim: batch_size*seq_len x num_tags
 
         # apply log softmax on each token's output (this is recommended over applying softmax
-        # since it is numerically more stable
+        # since it is numerically more stable)
         return F.log_softmax(s, dim=1)   # dim: batch_size*seq_len x num_tags
 
 
 def loss_fn(outputs, labels):
     """
-    Compute the loss given outputs from the model and labels for all tokens. Exclude loss terms for PADding tokens.
+    Compute the cross entropy loss given outputs from the model and labels for all tokens. Exclude loss terms
+    for PADding tokens.
 
     Args:
         outputs: (Variable) dimension batch_size*seq_len x num_tags - log softmax output of the model
@@ -91,6 +92,9 @@ def loss_fn(outputs, labels):
 
     Returns:
         loss: (Variable) cross entropy loss for all tokens in the batch
+
+    Note: you may use a standard loss function from http://pytorch.org/docs/master/nn.html#loss-functions. This example
+          demonstrates how you can easily define a custom loss function.
     """
 
     # reshape labels to give a flat vector of length batch_size*seq_len
@@ -107,7 +111,7 @@ def loss_fn(outputs, labels):
     
 def accuracy(outputs, labels):
     """
-    Coupute the accuracy, given the outputs and labels for all tokens. Exclude PADding terms.
+    Compute the accuracy, given the outputs and labels for all tokens. Exclude PADding terms.
 
     Args:
         outputs: (np.ndarray) dimension batch_size*seq_len x num_tags - log softmax output of the model

@@ -1,14 +1,13 @@
 import random
 import numpy as np
-import json
 import os
 import sys
 
 import torch
 from torch.autograd import Variable
-import pdb
 
 import utils 
+
 
 class DataLoader(object):
     def __init__(self, data_dir, params):
@@ -41,8 +40,7 @@ class DataLoader(object):
         
         # update params reference
         params.update(json_path)
-                
-        
+
     def load_sentences_labels(self, sentences_file, labels_file, d):
         sentences = []
         labels = []
@@ -70,8 +68,7 @@ class DataLoader(object):
         d['data'] = sentences
         d['labels'] = labels
         d['size'] = len(sentences)
-    
-    
+
     def load_data(self, types, data_dir):
         data = {}
         
@@ -83,8 +80,7 @@ class DataLoader(object):
                 self.load_sentences_labels(sentences_file, labels_file, data[split])
 
         return data
-        
-        
+
     def data_iterator(self, data, params, shuffle=False):     
         order = list(range(data['size']))
         if shuffle:

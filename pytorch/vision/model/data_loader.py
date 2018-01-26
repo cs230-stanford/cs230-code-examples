@@ -1,12 +1,10 @@
 import random
-import numpy as np
 import os
 
 from PIL import Image
 import torch
 from torch.autograd import Variable
 import torchvision.transforms as transforms
-import pdb
 
 
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
