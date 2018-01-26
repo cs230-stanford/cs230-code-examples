@@ -50,12 +50,12 @@ python build_vocab.py --data_dir data/small
 ```
 It will write vocabulary files `words.txt` and `tags.txt` containing the words and tags in the dataset. It will also save a `dataset_params.json` with some extra information.
 
-2. __Your first experiment__ We created a `test` directory for you under the `experiments` directory. It countains a file `params.json` which sets the parameters for the experiment. It looks like
+2. __Your first experiment__ We created a `base_model` directory for you under the `experiments` directory. It countains a file `params.json` which sets the parameters for the experiment. It looks like
 ```json
 {
     "learning_rate": 1e-3,
     "batch_size": 5,
-    "num_epochs": 2,
+    "num_epochs": 2
 }
 ```
 For every new experiment, you will need to create a new directory under `experiments` with a `params.json` file.
@@ -96,7 +96,7 @@ We recommend reading through `train.py` to get a high-level overview of the step
 
 Once you get the high-level idea, depending on your dataset, you might want to modify
 - `model/model_fn.py` to change the model
-- `model/input_fn` to change the way you read data / change the way you combine your different files
+- `model/input_fn.py` to change the way you read data / change the way you combine your different files
 - `train.py` and `evaluate.py` to change the story-line (maybe you need another vocabulary, etc.)
 
 If you want to compute new metrics for which you can find a [tensorflow implementation](https://www.tensorflow.org/api_docs/python/tf/metrics), you can define it in the `model_fn.py` (add it to the `metrics` dictionnary). It will automatically be updated during the training and will be displayed at the end of each epoch.
