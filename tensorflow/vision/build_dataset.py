@@ -1,6 +1,6 @@
 """Split the SIGNS dataset into train/dev/test and resize images to 64x64.
 
-The SIGNS dataset comes into the following format:
+The SIGNS dataset comes in the following format:
     train_signs/
         0_IMG_5864.jpg
         ...
