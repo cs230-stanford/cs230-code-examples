@@ -16,7 +16,7 @@ When you're done working on the project, deactivate the virtual environment with
 
 ## Task
 
-Given a sentence, give a tag to each word ([wikipedia](https://en.wikipedia.org/wiki/Named-entity_recognition))
+Given a sentence, give a tag to each word ([Named Entity Recognition](https://en.wikipedia.org/wiki/Named-entity_recognition))
 
 ```
 John   lives in New   York
@@ -47,7 +47,7 @@ It will extract the sentences and labels from the dataset, split it into train /
 1. __Build__ vocabularies and parameters for your dataset by running
 
 ```
-python build_vocab.py --data_dir="data/small"
+python build_vocab.py --data_dir data/small
 ```
 
 It will write vocabulary files `words.txt` and `tags.txt` containing the words and tags in the dataset. It will also save a `dataset_params.json` with some extra information.
@@ -67,7 +67,7 @@ For every new experiment, you will need to create a new directory under `experim
 3. __Train__ your experiment. Simply run
 
 ```
-python train.py --data_dir="data/small" --model_dir="experiments/test"
+python train.py --data_dir data/small --model_dir experiments/base_model
 ```
 
 
@@ -76,7 +76,7 @@ It will instantiate a model and train it on the training set following the param
 4. __Your first hyperparameters search__ We created a new directory `learning_rate` in `experiments` for you. Now, run
 
 ```
-python search_hyperparams.py --parent_dir="experiments/learning_rate"
+python search_hyperparams.py --parent_dir experiments/learning_rate
 ```
 
 It will train and evaluate a model with different values of learning rate defined in `search_hyperparams.py` and create a new directory for each experiment under `experiments/learning_rate/`.
@@ -84,13 +84,13 @@ It will train and evaluate a model with different values of learning rate define
 5. __Display the results__ of the hyperparameters search in a nice format
 
 ```
-python synthesize_results.py --parent_dir="experiments/learning_rate"
+python synthesize_results.py --parent_dir experiments/learning_rate
 ```
 
 6. __Evaluation on the test set__ Once you've run many experiments and selected your best model and hyperparameters based on the performance on the development set, you can finally evaluate the performance of your model on the test set. Run
 
 ```
-python evaluate.py --data_dir="data/small" --model_dir="experiments/test"
+python evaluate.py --data_dir data/small --model_dir experiments/base_model
 ```
 
 
