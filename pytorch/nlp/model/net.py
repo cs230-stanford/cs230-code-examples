@@ -103,6 +103,10 @@ def loss_fn(outputs, labels):
     # since PADding tokens have label -1, we can generate a mask to exclude the loss from those terms
     mask = (labels >= 0).float()
 
+    # indexing with negative values is not supported. Since PADded tokens have label -1, we convert them to a positive
+    # number. This does not affect training, since we ignore the PADded tokens with the mask.
+    labels = labels % outputs.shape[1]
+
     num_tokens = int(torch.sum(mask).data[0])
 
     # compute cross entropy loss for all tokens (except PADding tokens), by multiplying with mask.

@@ -26,7 +26,7 @@ class DataLoader(object):
 
         # loading dataset_params
         json_path = os.path.join(data_dir, 'dataset_params.json')
-        assert os.path.isfile(json_path), "No json file found at {}, run build.py".format(json_path)
+        assert os.path.isfile(json_path), "No json file found at {}, run build_vocab.py".format(json_path)
         self.dataset_params = utils.Params(json_path)        
         
         # loading vocab (we require this to map words to their indices)
@@ -63,9 +63,8 @@ class DataLoader(object):
 
         sentences = []
         labels = []
-        
-        use_python3 = sys.version_info[0] >= 3
-        with open(sentences_file, encoding="windows-1252") if use_python3 else open(sentences_file) as f:
+
+        with open(sentences_file) as f:
             for sentence in f.read().splitlines():
                 # replace each token by its index if it is in vocab
                 # else use index of UNK_WORD
