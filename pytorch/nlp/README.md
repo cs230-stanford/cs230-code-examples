@@ -103,7 +103,7 @@ Once you get the high-level idea, depending on your dataset, you might want to m
 - `model/model.py` to change the neural network, loss function and metrics
 - `model/data_loader.py` to suit the data loader to your specific needs
 - `train.py` for changing the optimizer
-- 'train.py` and `evaluate.py` some changes in the model or input require changes here
+- `train.py` and `evaluate.py` some changes in the model or input require changes here
 
 Once you get something working for your dataset, feel free to edit any part of the code to suit your own needs.
 
