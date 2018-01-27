@@ -1,4 +1,4 @@
-# Hand Signs Recognition with Tensorflow
+# Hand Signs Recognition with PyTorch
 
 *Authors: Surag Nair, Olivier Moindrot and Guillaume Genthial*
 

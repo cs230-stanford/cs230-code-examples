@@ -1,4 +1,4 @@
-# Named Entity Recognition with Tensorflow
+# Named Entity Recognition with PyTorch
 
 *Authors: Surag Nair, Guillaume Genthial and Olivier Moindrot*
 
