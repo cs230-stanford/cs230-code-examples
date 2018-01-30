@@ -1,4 +1,5 @@
 numpy
-tensorflow>=1.4
+Pillow
+tensorflow>=1.5
 tabulate
 tqdm
