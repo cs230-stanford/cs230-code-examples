@@ -11,15 +11,16 @@ from model.utils import Params
 PYTHON = sys.executable
 parser = argparse.ArgumentParser()
 parser.add_argument('--parent_dir', default='experiments/learning_rate',
-                    help='Directory containing params.json')
-parser.add_argument('--data_dir', default='data/small', help="Directory containing the dataset")
+                    help="Directory containing params.json")
+parser.add_argument('--data_dir', default='data/small',
+                    help="Directory containing the dataset")
 
 
 def launch_training_job(parent_dir, data_dir, job_name, params):
     """Launch training of the model with a set of hyperparameters in parent_dir/job_name
 
     Args:
-        model_dir: (string) directory containing config, weights and log
+        parent_dir: (string) directory containing config, weights and log
         data_dir: (string) directory containing the dataset
         params: (dict) containing hyperparameters
     """
