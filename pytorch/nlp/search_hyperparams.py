@@ -3,11 +3,12 @@
 import argparse
 import os
 from subprocess import check_call
+import sys
 
 import utils
 
 
-PYTHON = "python3"
+PYTHON = sys.executable
 parser = argparse.ArgumentParser()
 parser.add_argument('--parent_dir', default='experiments/learning_rate',
                     help='Directory containing params.json')

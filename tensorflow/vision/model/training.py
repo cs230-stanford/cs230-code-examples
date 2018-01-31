@@ -68,6 +68,7 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
     # Initialize tf.Saver instances to save weights during training
     last_saver = tf.train.Saver() # will keep last 5 epochs
     best_saver = tf.train.Saver(max_to_keep=1)  # only keep 1 best checkpoint (best on eval)
+    begin_at_epoch = 0
 
     with tf.Session() as sess:
         # Initialize model variables
@@ -78,6 +79,7 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
             logging.info("Restoring parameters from {}".format(restore_from))
             if os.path.isdir(restore_from):
                 restore_from = tf.train.latest_checkpoint(restore_from)
+                begin_at_epoch = int(restore_from.split('-')[-1])
             last_saver.restore(sess, restore_from)
 
         # For tensorboard (takes care of writing summaries to files)
@@ -85,9 +87,9 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval_summaries'), sess.graph)
 
         best_eval_acc = 0.0
-        for epoch in range(params.num_epochs):
+        for epoch in range(begin_at_epoch, begin_at_epoch + params.num_epochs)::
             # Run one epoch
-            logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
+            logging.info("Epoch {}/{}".format(epoch + 1, begin_at_epoch + params.num_epochs))
             # Compute number of batches in one epoch (one full pass over the training set)
             num_steps = (params.train_size + params.batch_size - 1) // params.batch_size
             train_sess(sess, train_model_spec, num_steps, train_writer, params)
