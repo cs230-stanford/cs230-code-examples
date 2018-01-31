@@ -46,6 +46,10 @@ def train(model, optimizer, loss_fn, dataloader, metrics, params):
     # Use tqdm for progress bar
     with tqdm(total=len(dataloader)) as t:
         for i, (train_batch, labels_batch) in enumerate(dataloader):
+
+            # move to GPU if available
+            if params.cuda:
+                train_batch, labels_batch = train_batch.cuda(async=True), labels_batch.cuda(async=True)
             # convert to torch Variables
             train_batch, labels_batch = Variable(train_batch), Variable(labels_batch)
 
@@ -78,10 +82,10 @@ def train(model, optimizer, loss_fn, dataloader, metrics, params):
             t.set_postfix(loss='{:05.3f}'.format(loss_avg()))
             t.update()
 
-        # compute mean of all metrics in summary
-        metrics_mean = {metric:np.mean([x[metric] for x in summ]) for metric in summ[0]}
-        metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_mean.items())
-        logging.info("- Train metrics: " + metrics_string)
+    # compute mean of all metrics in summary
+    metrics_mean = {metric:np.mean([x[metric] for x in summ]) for metric in summ[0]}
+    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_mean.items())
+    logging.info("- Train metrics: " + metrics_string)
 
 
 def train_and_evaluate(model, train_dataloader, val_dataloader, optimizer, loss_fn, metrics, params, model_dir,
