@@ -15,7 +15,7 @@ from model.model_fn import model_fn
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_dir', default='experiments/test',
+parser.add_argument('--model_dir', default='experiments/base_model',
                     help="Directory containing params.json")
 parser.add_argument('--data_dir', default='data/small', help="Directory containing the dataset")
 parser.add_argument('--restore_dir', default=None,
