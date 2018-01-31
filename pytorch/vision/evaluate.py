@@ -6,6 +6,7 @@ import os
 
 import numpy as np
 import torch
+from torch.autograd import Variable
 import utils
 import model.net as net
 import model.data_loader as data_loader
@@ -17,13 +18,13 @@ parser.add_argument('--restore_file', default='best', help="name of the file in 
                      containing weights to load")
 
 
-def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
+def evaluate(model, loss_fn, dataloader, metrics, params):
     """Evaluate the model on `num_steps` batches.
 
     Args:
         model: (torch.nn.Module) the neural network
         loss_fn: a function that takes batch_output and batch_labels and computes the loss for the batch
-        data_iterator: (generator) a generator that generates batches of data and labels
+        dataloader: (DataLoader) a torch.utils.data.DataLoader object that fetches data
         metrics: (dict) a dictionary of functions that compute a metric using the output and labels of each batch
         params: (Params) hyperparameters
         num_steps: (int) number of batches to train on, each of size params.batch_size
@@ -36,9 +37,13 @@ def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
     summ = []
 
     # compute metrics over the dataset
-    for _ in range(num_steps):
+    for data_batch, labels_batch in dataloader:
+
+        # move to GPU if available
+        if params.cuda:
+            data_batch, labels_batch = data_batch.cuda(async=True), labels_batch.cuda(async=True)
         # fetch the next evaluation batch
-        data_batch, labels_batch = next(data_iterator)
+        data_batch, labels_batch = Variable(data_batch), Variable(labels_batch)
         
         # compute model output
         output_batch = model(data_batch)

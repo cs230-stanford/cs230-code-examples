@@ -2,121 +2,89 @@ import random
 import os
 
 from PIL import Image
-import torch
-from torch.autograd import Variable
+from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 
-
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
-# define an image loader that specifies transforms on images. See documentation for more details.
-loader = transforms.Compose([
-    transforms.Resize(64),   # resize the image to 64x64 (remove if images are already 64x64)
-    transforms.ToTensor()])  # transform it into a torch tensor    
+# and http://pytorch.org/tutorials/beginner/data_loading_tutorial.html
+# define a training image loader that specifies transforms on images. See documentation for more details.
+train_transformer = transforms.Compose([
+    transforms.Resize(64),  # resize the image to 64x64 (remove if images are already 64x64)
+    transforms.RandomHorizontalFlip(),  # randomly flip image horizontally
+    transforms.ToTensor()])  # transform it into a torch tensor
+
+# loader for evaluation, no horizontal flip
+eval_transformer = transforms.Compose([
+    transforms.Resize(64),  # resize the image to 64x64 (remove if images are already 64x64)
+    transforms.ToTensor()])  # transform it into a torch tensor
 
 
-def image_loader(filename):
+class SIGNSDataset(Dataset):
     """
-    Loads image from filename.
-
-    Args:
-        filename: (string) path of image to be loaded
-
-    Returns:
-        image: (Tensor) contains data of the image
+    A standard PyTorch definition of Dataset which defines the functions __len__ and __getitem__.
     """
-    image = Image.open(filename)    # PIL image
-    image = loader(image)           # dim: 3 x 64 x 64 (applies transformations from loader)
-    image = image.unsqueeze(0)      # dim: 1 x 3 x 64 x 64 (fake batch dimension added)
-    return image
+    def __init__(self, data_dir, transform):
+        """
+        Store the filenames of the jpgs to use. Specifies transforms to apply on images.
+
+        Args:
+            data_dir: (string) directory containing the dataset
+            transform: (torchvision.transforms) transformation to apply on image
+        """
+        self.filenames = os.listdir(data_dir)
+        self.filenames = [os.path.join(data_dir, f) for f in self.filenames if f.endswith('.jpg')]
+
+        self.labels = [int(filename.split('/')[-1][0]) for filename in self.filenames]
+        self.transform = transform
+
+    def __len__(self):
+        # return size of dataset
+        return len(self.filenames)
+
+    def __getitem__(self, idx):
+        """
+        Fetch index idx image and labels from dataset. Perform transforms on image.
+
+        Args:
+            idx: (int) index in [0, 1, ..., size_of_dataset-1]
+
+        Returns:
+            image: (Tensor) transformed image
+            label: (int) corresponding label of image
+        """
+        image = Image.open(self.filenames[idx])  # PIL image
+        image = self.transform(image)
+        return image, self.labels[idx]
 
 
-def load_set(filenames):
+def fetch_dataloader(types, data_dir, params):
     """
-    Load all images in filenames.
-
-    Args:
-        filenames: (list) contains all filenames from which images are to be loaded.
-
-    Returns:
-        images: (Tensor) contains all image data
-    """
-    images = []
-    for filename in filenames:
-        images.append(image_loader(filename))
-
-    # images is a list where each image is a Tensor with dim 1 x 3 x 64 x 64
-    # we concatenate them into one Tensor of dim len(images) x 3 x 64 x 64
-    images = torch.cat(images)
-    return images
-
-
-def load_data(types, data_dir):
-    """
-    Loads the data for each type in types from data_dir.
+    Fetches the DataLoader object for each type in types from data_dir.
 
     Args:
         types: (list) has one or more of 'train', 'val', 'test' depending on which data is required
         data_dir: (string) directory containing the dataset
+        params: (Params) hyperparameters
 
     Returns:
-        data: (dict) contains the data with labels for each type in types
+        data: (dict) contains the DataLoader object for each type in types
     """
-    data = {}    
-    
+    dataloaders = {}
+
     for split in ['train', 'val', 'test']:
         if split in types:
             path = os.path.join(data_dir, "{}_signs".format(split))
-            filenames = os.listdir(path)
-            filenames = [os.path.join(path, f) for f in filenames if f.endswith('.jpg')]
 
-            # load the images from the corresponding files
-            images = load_set(filenames)
+            # use the train_transformer if training data, else use eval_transformer without random flip
+            if split == 'train':
+                dl = DataLoader(SIGNSDataset(path, train_transformer), batch_size=params.batch_size, shuffle=True,
+                                        num_workers=params.num_workers,
+                                        pin_memory=params.cuda)
+            else:
+                dl = DataLoader(SIGNSDataset(path, eval_transformer), batch_size=params.batch_size, shuffle=False,
+                                num_workers=params.num_workers,
+                                pin_memory=params.cuda)
 
-            # labels are present in the filename itself for SIGNS
-            labels = [int(filename.split('/')[-1][0]) for filename in filenames]
+            dataloaders[split] = dl
 
-            # storing images and labels in dict
-            data[split] = {}
-            data[split]['data'] = images
-            # since labels are indices, we convert them to torch LongTensors
-            data[split]['labels'] = torch.LongTensor(labels)
-            data[split]['size'] = images.shape[0]
-    
-    return data
-    
-    
-def data_iterator(data, params, shuffle=False):
-    """
-    Returns a generator that yields batches data with labels. Batch size is params.batch_size. Expires after one
-    pass over the data.
-
-    Args:
-        data: (dict) contains data which has keys 'data', 'labels' and 'size'
-        params: (Params) hyperparameters of the training process.
-        shuffle: (bool) whether the data should be shuffled
-
-    Yields:
-        batch_data: (Variable) dimension batch_size x 3 x 64 x 64 with the sentence data
-        batch_labels: (Variable) dimension batch_size with the corresponding labels
-    """
-
-    # make a list that decides the order in which we go over the data- this avoids explicit shuffling of dat
-    order = list(range(data['size']))
-    if shuffle:
-        random.seed(230)
-        random.shuffle(order)
-
-    # one pass over data
-    for i in range((data['size']+1)//params.batch_size):
-        # fetch images and labels
-        batch_data = data['data'][order[i*params.batch_size:(i+1)*params.batch_size]]
-        batch_labels = data['labels'][order[i*params.batch_size:(i+1)*params.batch_size]]
-
-        # shift tensors to GPU if available
-        if params.cuda:
-            batch_data, batch_labels = batch_data.cuda(), batch_labels.cuda()
-
-        # convert them to Variables to record operations in the computational graph
-        batch_data, batch_labels = Variable(batch_data), Variable(batch_labels)
-
-        yield batch_data, batch_labels
+    return dataloaders
