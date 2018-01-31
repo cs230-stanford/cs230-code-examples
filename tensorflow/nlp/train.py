@@ -38,6 +38,12 @@ if __name__ == '__main__':
     params.update(json_path)
     num_oov_buckets = params.num_oov_buckets # number of buckets for unknown words
 
+    # Check that we are not overwriting some previous experiment
+    # Comment these lines if you are developing your model and don't care about overwritting
+    model_dir_has_best_weights = os.path.isdir(os.path.join(args.model_dir, "best_weights"))
+    overwritting = model_dir_has_best_weights and args.restore_dir is None
+    assert not overwritting, "Weights found in model_dir, aborting to avoid overwrite"
+
     # Set the logger
     set_logger(os.path.join(args.model_dir, 'train.log'))
 
