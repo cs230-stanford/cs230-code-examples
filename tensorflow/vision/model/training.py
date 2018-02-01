@@ -87,7 +87,7 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval_summaries'), sess.graph)
 
         best_eval_acc = 0.0
-        for epoch in range(begin_at_epoch, begin_at_epoch + params.num_epochs)::
+        for epoch in range(begin_at_epoch, begin_at_epoch + params.num_epochs):
             # Run one epoch
             logging.info("Epoch {}/{}".format(epoch + 1, begin_at_epoch + params.num_epochs))
             # Compute number of batches in one epoch (one full pass over the training set)
