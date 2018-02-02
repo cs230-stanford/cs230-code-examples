@@ -48,7 +48,7 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps):
     for i in t:
         # fetch the next training batch
         train_batch, labels_batch = next(data_iterator)
-                    
+
         # compute model output and loss
         output_batch = model(train_batch)
         loss = loss_fn(output_batch, labels_batch)
@@ -119,7 +119,7 @@ def train_and_evaluate(model, train_data, val_data, optimizer, loss_fn, metrics,
         val_metrics = evaluate(model, loss_fn, val_data_iterator, metrics, params, num_steps)
         
         val_acc = val_metrics['accuracy']
-        is_best = val_acc>=best_val_acc
+        is_best = val_acc >= best_val_acc
 
         # Save weights
         utils.save_checkpoint({'epoch': epoch + 1,

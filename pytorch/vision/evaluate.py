@@ -89,13 +89,9 @@ if __name__ == '__main__':
     # Create the input data pipeline
     logging.info("Creating the dataset...")
 
-    # load data
-    data = data_loader.load_data(['test'], args.data_dir)
-    test_data = data['test']
-
-    # specify the test set size
-    params.test_size = test_data['size']
-    test_data_iterator = data_loader.data_iterator(test_data, params)
+    # fetch dataloaders
+    dataloaders = data_loader.fetch_dataloader(['test'], args.data_dir, params)
+    test_dl = dataloaders['test']
 
     logging.info("- done.")
 
@@ -111,7 +107,6 @@ if __name__ == '__main__':
     utils.load_checkpoint(os.path.join(args.model_dir, args.restore_file + '.pth.tar'), model)
 
     # Evaluate
-    num_steps = (params.test_size + 1) // params.batch_size
-    test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, params, num_steps)
+    test_metrics = evaluate(model, loss_fn, test_dl, metrics, params)
     save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_file))
     utils.save_dict_to_json(test_metrics, save_path)
