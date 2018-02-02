@@ -17,7 +17,7 @@ def build_model(is_training, inputs, params):
     """
     images = inputs['images']
 
-    assert images.get_shape().as_list() == [None, 64, 64, 3]
+    assert images.get_shape().as_list() == [None, params.image_size, params.image_size, 3]
 
     out = images
     # Define the number of channels of each convolution
@@ -42,7 +42,7 @@ def build_model(is_training, inputs, params):
             out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
         out = tf.nn.relu(out)
     with tf.variable_scope('fc_2'):
-        logits = tf.layers.dense(out, 6)
+        logits = tf.layers.dense(out, params.num_labels)
 
     return logits
 
@@ -113,7 +113,7 @@ def model_fn(mode, inputs, params, reuse=False):
     mask = tf.not_equal(labels, predictions)
 
     # Add a different summary to know how they were misclassified
-    for label in range(0, 6):
+    for label in range(0, params.num_labels):
         mask_label = tf.logical_and(mask, tf.equal(predictions, label))
         incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
         tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)

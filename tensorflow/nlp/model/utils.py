@@ -31,12 +31,12 @@ class Params():
 
     @property
     def dict(self):
-        """Gives dict-like access to Params instance by `params.dict['learning_rate']"""
+        """Gives dict-like access to Params instance by `params.dict['learning_rate']`"""
         return self.__dict__
 
 
 def set_logger(log_path):
-    """Set the logger to log info in terminal and file `log_path`.
+    """Sets the logger to log info in terminal and file `log_path`.
 
     In general, it is useful to have a logger so that every output to the terminal is saved
     in a permanent file. Here we save it to `model_dir/train.log`.

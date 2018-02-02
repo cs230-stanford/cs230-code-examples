@@ -71,7 +71,7 @@ def evaluate(model_spec, model_dir, params, restore_from):
         saver.restore(sess, save_path)
 
         # Evaluate
-        num_steps = (params.test_size + params.batch_size - 1) // params.batch_size
+        num_steps = (params.eval_size + params.batch_size - 1) // params.batch_size
         metrics = evaluate_sess(sess, model_spec, num_steps)
         metrics_name = '_'.join(restore_from.split('/'))
         save_path = os.path.join(model_dir, "metrics_test_{}.json".format(metrics_name))

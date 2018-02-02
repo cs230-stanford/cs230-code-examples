@@ -15,7 +15,7 @@ from model.model_fn import model_fn
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_dir', default='experiments/test',
+parser.add_argument('--model_dir', default='experiments/base_model',
                     help="Directory containing params.json")
 parser.add_argument('--data_dir', default='data/small', help="Directory containing the dataset")
 parser.add_argument('--restore_dir', default=None,
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # Load the parameters from the dataset, that gives the size etc. into params
     json_path = os.path.join(args.data_dir, 'dataset_params.json')
-    assert os.path.isfile(json_path), "No json file found at {}, run build.py".format(json_path)
+    assert os.path.isfile(json_path), "No json file found at {}, run build_vocab.py".format(json_path)
     params.update(json_path)
     num_oov_buckets = params.num_oov_buckets # number of buckets for unknown words
 

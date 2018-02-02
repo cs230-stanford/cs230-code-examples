@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 
-def _parse_function(filename, label):
+def _parse_function(filename, label, size):
     """Obtain the image from the filename (for both training and validation).
 
     The following operations are applied:
@@ -18,19 +18,20 @@ def _parse_function(filename, label):
     # This will convert to float values in [0, 1]
     image = tf.image.convert_image_dtype(image_decoded, tf.float32)
 
-    resized_image = tf.image.resize_images(image, [64, 64])
+    resized_image = tf.image.resize_images(image, [size, size])
 
     return resized_image, label
 
 
-def train_preprocess(image, label):
+def train_preprocess(image, label, use_random_flip):
     """Image preprocessing for training.
 
     Apply the following operations:
         - Horizontally flip the image with probability 1/2
         - Apply random brightness and saturation
     """
-    image = tf.image.random_flip_left_right(image)
+    if use_random_flip:
+        image = tf.image.random_flip_left_right(image)
 
     image = tf.image.random_brightness(image, max_delta=32.0 / 255.0)
     image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
@@ -59,17 +60,20 @@ def input_fn(is_training, filenames, labels, params):
 
     # Create a Dataset serving batches of images and labels
     # We don't repeat for multiple epochs because we always train and evaluate for one epoch
+    parse_fn = lambda f, l: _parse_function(f, l, params.image_size)
+    train_fn = lambda f, l: train_preprocess(f, l, params.use_random_flip)
+
     if is_training:
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
             .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
-            .map(_parse_function, num_parallel_calls=params.num_parallel_calls)
-            .map(train_preprocess, num_parallel_calls=params.num_parallel_calls)
+            .map(parse_fn, num_parallel_calls=params.num_parallel_calls)
+            .map(train_fn, num_parallel_calls=params.num_parallel_calls)
             .batch(params.batch_size)
             .prefetch(1)  # make sure you always have one batch ready to serve
         )
     else:
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-            .map(_parse_function)
+            .map(parse_fn)
             .batch(params.batch_size)
             .prefetch(1)  # make sure you always have one batch ready to serve
         )
