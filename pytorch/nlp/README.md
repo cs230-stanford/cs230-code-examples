@@ -52,7 +52,7 @@ python build_vocab.py --data_dir data/small
 ```
 It will write vocabulary files `words.txt` and `tags.txt` containing the words and tags in the dataset. It will also save a `dataset_params.json` with some extra information.
 
-2. __Your first experiment__ We created a `base_model` directory for you under the `experiments` directory. It countains a file `params.json` which sets the parameters for the experiment. It looks like
+2. __Your first experiment__ We created a `base_model` directory for you under the `experiments` directory. It contains a file `params.json` which sets the hyperparameters for the experiment. It looks like
 ```json
 {
     "learning_rate": 1e-3,
@@ -66,7 +66,7 @@ For every new experiment, you will need to create a new directory under `experim
 ```
 python train.py --data_dir data/small --model_dir experiments/base_model
 ```
-It will instantiate a model and train it on the training set following the parameters specified in `params.json`. It will also evaluate some metrics on the development set.
+It will instantiate a model and train it on the training set following the hyperparameters specified in `params.json`. It will also evaluate some metrics on the development set.
 
 4. __Your first hyperparameters search__ We created a new directory `learning_rate` in `experiments` for you. Now, run
 ```
