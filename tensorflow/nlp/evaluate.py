@@ -57,6 +57,7 @@ if __name__ == '__main__':
     test_labels = load_dataset_from_text(path_eval_labels, tags)
 
     # Specify other parameters for the dataset and the model
+    params.eval_size = params.test_size
     params.id_pad_word = words.lookup(tf.constant(params.pad_word))
     params.id_pad_tag = tags.lookup(tf.constant(params.pad_tag))
 
