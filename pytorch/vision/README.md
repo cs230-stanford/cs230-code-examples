@@ -118,4 +118,4 @@ Once you get something working for your dataset, feel free to edit any part of t
 - [Tutorials](http://pytorch.org/tutorials/)
 - [PyTorch warm-up](https://github.com/jcjohnson/pytorch-examples)
 
-[SIGNS]: https://drive.google.com/drive/u/1/folders/19xqDh1dlfIs3G18DcDI1OvBom0T8AX6H
+[SIGNS]: https://drive.google.com/file/d/1ufiR6hUKhXoAyiBNsySPkUwlvE_wfEHC/view?usp=sharing
