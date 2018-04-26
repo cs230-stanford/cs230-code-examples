@@ -55,7 +55,7 @@ python build_dataset.py --data_dir data/SIGNS --output_dir data/64x64_SIGNS
 
 1. __Build the dataset of size 64x64__: make sure you complete this step before training
 ```bash
-python build_dataset.py --data_dir data/SIGNS --output_dir data/64x64_SIGNS
+python build_dataset.py --data_dir data/SIGNS\ dataset/ --output_dir data/64x64_SIGNS
 ```
 
 2. __Your first experiment__ We created a `base_model` directory for you under the `experiments` directory. It countains a file `params.json` which sets the parameters for the experiment. It looks like
