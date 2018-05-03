@@ -23,6 +23,26 @@ def _parse_function(filename, label, size):
     return resized_image, label
 
 
+def _parse_function_pred(filename, size):
+    """Obtain the image from the filename (for prediction only).
+
+    The following operations are applied:
+        - Decode the image from jpeg format
+        - Convert to float and to range [0, 1]
+    """
+    image_string = tf.read_file(filename)
+
+    # Don't use tf.image.decode_image, or the output shape will be undefined
+    image_decoded = tf.image.decode_jpeg(image_string, channels=3)
+
+    # This will convert to float values in [0, 1]
+    image = tf.image.convert_image_dtype(image_decoded, tf.float32)
+
+    resized_image = tf.image.resize_images(image, [size, size])
+
+    return resized_image
+
+
 def train_preprocess(image, label, use_random_flip):
     """Image preprocessing for training.
 
@@ -42,45 +62,59 @@ def train_preprocess(image, label, use_random_flip):
     return image, label
 
 
-def input_fn(is_training, filenames, labels, params):
+def input_fn(mode, filenames, labels, params):
     """Input function for the SIGNS dataset.
 
     The filenames have format "{label}_IMG_{id}.jpg".
     For instance: "data_dir/2_IMG_4584.jpg".
 
     Args:
-        is_training: (bool) whether to use the train or test pipeline.
-                     At training, we shuffle the data and have multiple epochs
+        mode: (tf.estimator.ModeKeys) Mode to choose between TRAIN, EVAL, and PREDICT pipelines.
+                     At training, we shuffle the data and have multiple epochs.
+                     At prediction, labels are not considered.
         filenames: (list) filenames of the images, as ["data_dir/{label}_IMG_{id}.jpg"...]
         labels: (list) corresponding list of labels
         params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
     """
     num_samples = len(filenames)
-    assert len(filenames) == len(labels), "Filenames and labels should have same length"
 
     # Create a Dataset serving batches of images and labels
     # We don't repeat for multiple epochs because we always train and evaluate for one epoch
     parse_fn = lambda f, l: _parse_function(f, l, params.image_size)
     train_fn = lambda f, l: train_preprocess(f, l, params.use_random_flip)
+    parse_fn_pred = lambda f: _parse_function_pred(f, params.image_size)
 
-    if is_training:
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        assert len(filenames) == len(labels), "Filenames and labels should have same length"
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-            .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
-            .map(parse_fn, num_parallel_calls=params.num_parallel_calls)
-            .map(train_fn, num_parallel_calls=params.num_parallel_calls)
-            .batch(params.batch_size)
-            .prefetch(1)  # make sure you always have one batch ready to serve
-        )
+                   .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
+                   .map(parse_fn, num_parallel_calls=params.num_parallel_calls)
+                   .map(train_fn, num_parallel_calls=params.num_parallel_calls)
+                   .batch(params.batch_size)
+                   .prefetch(1)  # make sure you always have one batch ready to serve
+                   )
+    elif mode == tf.estimator.ModeKeys.EVAL:
+        assert len(filenames) == len(labels), "Filenames and labels should have same length"
+        dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
+                   .map(parse_fn)
+                   .batch(params.batch_size)
+                   .prefetch(1)  # make sure you always have one batch ready to serve
+                   )
+    elif mode == tf.estimator.ModeKeys.PREDICT:
+        dataset = (tf.data.Dataset.from_tensor_slices(tf.constant(filenames))
+                   .map(parse_fn_pred)
+                   .batch(params.batch_size)
+                   .prefetch(1)  # make sure you always have one batch ready to serve
+                   )
     else:
-        dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-            .map(parse_fn)
-            .batch(params.batch_size)
-            .prefetch(1)  # make sure you always have one batch ready to serve
-        )
+        assert False, "Unknown mode"
 
     # Create reinitializable iterator from dataset
     iterator = dataset.make_initializable_iterator()
-    images, labels = iterator.get_next()
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        images = iterator.get_next()
+    else:
+        images, labels = iterator.get_next()
     iterator_init_op = iterator.initializer
 
     inputs = {'images': images, 'labels': labels, 'iterator_init_op': iterator_init_op}

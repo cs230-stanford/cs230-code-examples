@@ -51,7 +51,7 @@ def model_fn(mode, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
     Args:
-        mode: (string) can be 'train' or 'eval'
+        mode: (tf.estimator.ModeKeys) Mode to choose between TRAIN, EVAL, and PREDICT pipelines.
         inputs: (dict) contains the inputs of the graph (features, labels...)
                 this can be `tf.placeholder` or outputs of `tf.data`
         params: (Params) contains hyperparameters of the model (ex: `params.learning_rate`)
@@ -60,9 +60,8 @@ def model_fn(mode, inputs, params, reuse=False):
     Returns:
         model_spec: (dict) contains the graph operations or nodes needed for training / evaluation
     """
-    is_training = (mode == 'train')
-    labels = inputs['labels']
-    labels = tf.cast(labels, tf.int64)
+    is_training = (mode == tf.estimator.ModeKeys.TRAIN)
+    model_spec = inputs
 
     # -----------------------------------------------------------
     # MODEL: define the layers of the model
@@ -70,6 +69,14 @@ def model_fn(mode, inputs, params, reuse=False):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
         predictions = tf.argmax(logits, 1)
+        model_spec["predictions"] = predictions
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        model_spec['variable_init_op'] = tf.global_variables_initializer()
+        return model_spec
+
+    labels = inputs['labels']
+    labels = tf.cast(labels, tf.int64)
 
     # Define loss and accuracy
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
@@ -85,7 +92,6 @@ def model_fn(mode, inputs, params, reuse=False):
                 train_op = optimizer.minimize(loss, global_step=global_step)
         else:
             train_op = optimizer.minimize(loss, global_step=global_step)
-
 
     # -----------------------------------------------------------
     # METRICS AND SUMMARIES
@@ -108,7 +114,7 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('accuracy', accuracy)
     tf.summary.image('train_image', inputs['images'])
 
-    #TODO: if mode == 'eval': ?
+    # TODO: if mode == tf.estimator.ModeKeys.EVAL: ?
     # Add incorrectly labeled images
     mask = tf.not_equal(labels, predictions)
 
@@ -122,15 +128,13 @@ def model_fn(mode, inputs, params, reuse=False):
     # MODEL SPECIFICATION
     # Create the model specification and return it
     # It contains nodes or operations in the graph that will be used for training and evaluation
-    model_spec = inputs
-    model_spec['variable_init_op'] = tf.global_variables_initializer()
-    model_spec["predictions"] = predictions
     model_spec['loss'] = loss
     model_spec['accuracy'] = accuracy
     model_spec['metrics_init_op'] = metrics_init_op
     model_spec['metrics'] = metrics
     model_spec['update_metrics'] = update_metrics_op
     model_spec['summary_op'] = tf.summary.merge_all()
+    model_spec['variable_init_op'] = tf.global_variables_initializer()
 
     if is_training:
         model_spec['train_op'] = train_op

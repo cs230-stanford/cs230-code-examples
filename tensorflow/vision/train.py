@@ -50,10 +50,8 @@ if __name__ == '__main__':
     dev_data_dir = os.path.join(data_dir, "dev_signs")
 
     # Get the filenames from the train and dev sets
-    train_filenames = [os.path.join(train_data_dir, f) for f in os.listdir(train_data_dir)
-                       if f.endswith('.jpg')]
-    eval_filenames = [os.path.join(dev_data_dir, f) for f in os.listdir(dev_data_dir)
-                      if f.endswith('.jpg')]
+    train_filenames = [os.path.join(train_data_dir, f) for f in os.listdir(train_data_dir) if f.endswith('.jpg')]
+    eval_filenames = [os.path.join(dev_data_dir, f) for f in os.listdir(dev_data_dir) if f.endswith('.jpg')]
 
     # Labels will be between 0 and 5 included (6 classes in total)
     train_labels = [int(f.split('/')[-1][0]) for f in train_filenames]
@@ -64,13 +62,13 @@ if __name__ == '__main__':
     params.eval_size = len(eval_filenames)
 
     # Create the two iterators over the two datasets
-    train_inputs = input_fn(True, train_filenames, train_labels, params)
-    eval_inputs = input_fn(False, eval_filenames, eval_labels, params)
+    train_inputs = input_fn(tf.estimator.ModeKeys.TRAIN, train_filenames, train_labels, params)
+    eval_inputs = input_fn(tf.estimator.ModeKeys.EVAL, eval_filenames, eval_labels, params)
 
     # Define the model
     logging.info("Creating the model...")
-    train_model_spec = model_fn('train', train_inputs, params)
-    eval_model_spec = model_fn('eval', eval_inputs, params, reuse=True)
+    train_model_spec = model_fn(tf.estimator.ModeKeys.TRAIN, train_inputs, params)
+    eval_model_spec = model_fn(tf.estimator.ModeKeys.EVAL, eval_inputs, params, reuse=True)
 
     # Train the model
     logging.info("Starting training for {} epoch(s)".format(params.num_epochs))
