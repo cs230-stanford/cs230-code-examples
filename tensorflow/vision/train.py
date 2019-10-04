@@ -31,12 +31,14 @@ if __name__ == '__main__':
     # Load the parameters from json file
     args = parser.parse_args()
     json_path = os.path.join(args.model_dir, 'params.json')
-    assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
+    assert os.path.isfile(
+        json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
     # Check that we are not overwriting some previous experiment
     # Comment these lines if you are developing your model and don't care about overwritting
-    model_dir_has_best_weights = os.path.isdir(os.path.join(args.model_dir, "best_weights"))
+    model_dir_has_best_weights = os.path.isdir(
+        os.path.join(args.model_dir, "best_weights"))
     overwritting = model_dir_has_best_weights and args.restore_from is None
     assert not overwritting, "Weights found in model_dir, aborting to avoid overwrite"
 
@@ -74,4 +76,5 @@ if __name__ == '__main__':
 
     # Train the model
     logging.info("Starting training for {} epoch(s)".format(params.num_epochs))
-    train_and_evaluate(train_model_spec, eval_model_spec, args.model_dir, params, args.restore_from)
+    train_and_evaluate(train_model_spec, eval_model_spec,
+                       args.model_dir, params, args.restore_from)

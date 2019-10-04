@@ -51,7 +51,7 @@ def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
         # compute all metrics on this batch
         summary_batch = {metric: metrics[metric](output_batch, labels_batch)
                          for metric in metrics}
-        summary_batch['loss'] = loss.data[0]
+        summary_batch['loss'] = loss.item()
         summ.append(summary_batch)
 
     # compute mean of all metrics in summary
