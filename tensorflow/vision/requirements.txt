@@ -1,5 +1,5 @@
 numpy
 Pillow
-tensorflow>=1.5
+tensorflow==1.14
 tabulate
 tqdm

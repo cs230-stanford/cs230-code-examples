@@ -1,6 +1,6 @@
 # Hand Signs Recognition with Tensorflow
 
-*Authors: Olivier Moindrot and Guillaume Genthial*
+_Authors: Olivier Moindrot and Guillaume Genthial_
 
 Take the time to read the [tutorials](https://cs230-stanford.github.io).
 
@@ -22,13 +22,13 @@ When you're done working on the project, deactivate the virtual environment with
 
 Given an image of a hand doing a sign representing 0, 1, 2, 3, 4 or 5, predict the correct label.
 
-
 ## Download the SIGNS dataset
 
-For the vision example, we will used the SIGNS dataset created for this class. The dataset is hosted on google drive, download it [here][SIGNS].
+For the vision example, we will used the SIGNS dataset created for this class. The dataset is hosted on google drive, download it [here][signs].
 
 This will download the SIGNS dataset (~1.1 GB) containing photos of hands signs making numbers between 0 and 5.
 Here is the structure of the data:
+
 ```
 SIGNS/
     train_signs/
@@ -49,16 +49,16 @@ Run the script `build_dataset.py` which will resize the images to size `(64, 64)
 python build_dataset.py --data_dir data/SIGNS --output_dir data/64x64_SIGNS
 ```
 
-
-
 ## Quickstart (~10 min)
 
-1. __Build the dataset of size 64x64__: make sure you complete this step before training
+1. **Build the dataset of size 64x64**: make sure you complete this step before training
+
 ```bash
 python build_dataset.py --data_dir data/SIGNS\ dataset/ --output_dir data/64x64_SIGNS
 ```
 
-2. __Your first experiment__ We created a `base_model` directory for you under the `experiments` directory. It countains a file `params.json` which sets the parameters for the experiment. It looks like
+2. **Your first experiment** We created a `base_model` directory for you under the `experiments` directory. It countains a file `params.json` which sets the parameters for the experiment. It looks like
+
 ```json
 {
     "learning_rate": 1e-3,
@@ -67,42 +67,49 @@ python build_dataset.py --data_dir data/SIGNS\ dataset/ --output_dir data/64x64_
     ...
 }
 ```
+
 For every new experiment, you will need to create a new directory under `experiments` with a similar `params.json` file.
 
-3. __Train__ your experiment. Simply run
+3. **Train** your experiment. Simply run
+
 ```
 python train.py --data_dir data/64x64_SIGNS --model_dir experiments/base_model
 ```
+
 It will instantiate a model and train it on the training set following the parameters specified in `params.json`. It will also evaluate some metrics on the development set.
 
-4. __Your first hyperparameters search__ We created a new directory `learning_rate` in `experiments` for you. Now, run
+4. **Your first hyperparameters search** We created a new directory `learning_rate` in `experiments` for you. Now, run
+
 ```
 python search_hyperparams.py --data_dir data/64x64_SIGNS --parent_dir experiments/learning_rate
 ```
+
 It will train and evaluate a model with different values of learning rate defined in `search_hyperparams.py` and create a new directory for each experiment under `experiments/learning_rate/`.
 
-5. __Display the results__ of the hyperparameters search in a nice format
+5. **Display the results** of the hyperparameters search in a nice format
+
 ```
 python synthesize_results.py --parent_dir experiments/learning_rate
 ```
 
-6. __Evaluation on the test set__ Once you've run many experiments and selected your best model and hyperparameters based on the performance on the development set, you can finally evaluate the performance of your model on the test set. Run
+6. **Evaluation on the test set** Once you've run many experiments and selected your best model and hyperparameters based on the performance on the development set, you can finally evaluate the performance of your model on the test set. Run
+
 ```
 python evaluate.py --data_dir data/64x64_SIGNS --model_dir experiments/base_model
 ```
 
-
 ## Guidelines for more advanced use
 
 We recommend reading through `train.py` to get a high-level overview of the steps:
+
 - loading the hyperparameters for the experiment (the `params.json`)
-- getting the filenames / labels 
+- getting the filenames / labels
 - creating the input of our model by zipping the filenames and labels together (`input_fn(...)`), reading the images as well as performing batching and shuffling.
 - creating the model (=nodes / ops of the `tf.Graph()`) by calling `model_fn(...)`
 - training the model for a given number of epochs by calling `train_and_evaluate(...)`
 
-
 Once you get the high-level idea, depending on your dataset, you might want to modify
+
 - `model/model_fn.py` to change the model
 - `model/input_fn.py` to change the way you read data
 - `train.py` and `evaluate.py` if somes changes in the model or input require changes here
@@ -113,13 +120,17 @@ Once you get something working for your dataset, feel free to edit any part of t
 
 ## Resources
 
+Note that this repository uses Tensorflow 1.14. Tensorflow 2 has just been
+released, so the links below now point to Tensorflow 2 documentation. You can
+navigate to the old 1.14 docs through the API dropdown on navigation bar.
+
+There are major changes between TF 1 and TF 2, most notably Eager Execution
+being the new default mode. If your team is starting with a new project, we
+recommend using Tensorflow 2.
+
 Introduction to the `tf.data` pipeline
+
 - [programmer's guide](https://www.tensorflow.org/programmers_guide/datasets)
 - [reading images](https://www.tensorflow.org/programmers_guide/datasets#decoding_image_data_and_resizing_it)
 
-
-
-
-
-
-[SIGNS]: https://drive.google.com/file/d/1ufiR6hUKhXoAyiBNsySPkUwlvE_wfEHC/view?usp=sharing
+[signs]: https://drive.google.com/file/d/1ufiR6hUKhXoAyiBNsySPkUwlvE_wfEHC/view?usp=sharing

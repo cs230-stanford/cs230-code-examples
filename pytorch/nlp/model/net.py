@@ -38,11 +38,12 @@ class Net(nn.Module):
 
         # the LSTM takes as input the size of its input (embedding_dim), its hidden size
         # for more details on how to use it, check out the documentation
-        self.lstm = nn.LSTM(params.embedding_dim, params.lstm_hidden_dim, batch_first=True)
+        self.lstm = nn.LSTM(params.embedding_dim,
+                            params.lstm_hidden_dim, batch_first=True)
 
         # the fully connected layer transforms the output to give the final output layer
         self.fc = nn.Linear(params.lstm_hidden_dim, params.number_of_tags)
-        
+
     def forward(self, s):
         """
         This function defines how we use the components of our network to operate on an input batch.
@@ -61,16 +62,19 @@ class Net(nn.Module):
         """
         #                                -> batch_size x seq_len
         # apply the embedding layer that maps each token to its embedding
-        s = self.embedding(s)            # dim: batch_size x seq_len x embedding_dim
+        # dim: batch_size x seq_len x embedding_dim
+        s = self.embedding(s)
 
         # run the LSTM along the sentences of length seq_len
-        s, _ = self.lstm(s)              # dim: batch_size x seq_len x lstm_hidden_dim
+        # dim: batch_size x seq_len x lstm_hidden_dim
+        s, _ = self.lstm(s)
 
         # make the Variable contiguous in memory (a PyTorch artefact)
         s = s.contiguous()
 
         # reshape the Variable so that each row contains one token
-        s = s.view(-1, s.shape[2])       # dim: batch_size*seq_len x lstm_hidden_dim
+        # dim: batch_size*seq_len x lstm_hidden_dim
+        s = s.view(-1, s.shape[2])
 
         # apply the fully connected layer and obtain the output (before softmax) for each token
         s = self.fc(s)                   # dim: batch_size*seq_len x num_tags
@@ -107,12 +111,12 @@ def loss_fn(outputs, labels):
     # number. This does not affect training, since we ignore the PADded tokens with the mask.
     labels = labels % outputs.shape[1]
 
-    num_tokens = int(torch.sum(mask).data[0])
+    num_tokens = int(torch.sum(mask))
 
     # compute cross entropy loss for all tokens (except PADding tokens), by multiplying with mask.
     return -torch.sum(outputs[range(outputs.shape[0]), labels]*mask)/num_tokens
-    
-    
+
+
 def accuracy(outputs, labels):
     """
     Compute the accuracy, given the outputs and labels for all tokens. Exclude PADding terms.
@@ -135,7 +139,7 @@ def accuracy(outputs, labels):
     outputs = np.argmax(outputs, axis=1)
 
     # compare outputs with labels and divide by number of tokens (excluding PADding tokens)
-    return np.sum(outputs==labels)/float(np.sum(mask))
+    return np.sum(outputs == labels)/float(np.sum(mask))
 
 
 # maintain all metrics required in this dictionary- these are used in the training and evaluation loops
