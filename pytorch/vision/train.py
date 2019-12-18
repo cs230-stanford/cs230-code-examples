@@ -15,6 +15,9 @@ import model.net as net
 import model.data_loader as data_loader
 from evaluate import evaluate
 
+# 我们的训练同样需要3（2）个参数
+# 一个是input的来源，一个是模型的来源（储存着各种初始化的参数）
+# 训练好的参数也可以进行储存
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='data/64x64_SIGNS',
                     help="Directory containing the dataset")
