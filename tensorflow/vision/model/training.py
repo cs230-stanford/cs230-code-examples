@@ -38,15 +38,13 @@ def train_sess(sess, model_spec, num_steps, writer, params):
         # Evaluate summaries for tensorboard only once in a while
         if i % params.save_summary_steps == 0:
             # Perform a mini-batch update
-            _, _, loss_val, summ, global_step_val = sess.run([train_op, update_metrics, loss,
-                                                              summary_op, global_step])
+            _, _, loss_val, summ, global_step_val = sess.run([train_op, update_metrics, loss, summary_op, global_step])
             # Write summaries for tensorboard
             writer.add_summary(summ, global_step_val)
         else:
             _, _, loss_val = sess.run([train_op, update_metrics, loss])
         # Log the loss in the tqdm progress bar
         t.set_postfix(loss='{:05.3f}'.format(loss_val))
-
 
     metrics_values = {k: v[0] for k, v in metrics.items()}
     metrics_val = sess.run(metrics_values)
@@ -66,7 +64,7 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         restore_from: (string) directory or file containing weights to restore the graph
     """
     # Initialize tf.Saver instances to save weights during training
-    last_saver = tf.train.Saver() # will keep last 5 epochs
+    last_saver = tf.train.Saver()  # will keep last 5 epochs
     best_saver = tf.train.Saver(max_to_keep=1)  # only keep 1 best checkpoint (best on eval)
     begin_at_epoch = 0
 
