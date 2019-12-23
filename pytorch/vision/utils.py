@@ -5,6 +5,15 @@ import shutil
 
 import torch
 
+# 这个文件的作用：正如其文件名一样，集成了多种函数
+# 所以比较杂，这里稍微介绍一下
+# 作用是：
+# 1. 设置param类型的变量
+# 2. 设置能够自动计算平均值的类
+# 3. 设置自动转换为python float类型并保存为json格式的函数
+# 4. 根据checkpoint（其实就是路径）保存模型参数的函数
+# 5. 与4对应，存在着根据checkpoint加载模型参数的函数
+
 class Params():
     """Class that loads hyperparameters from a json file.
 
@@ -74,6 +83,12 @@ def set_logger(log_path):
     Args:
         log_path: (string) where to log
     """
+    # 顾名思义，这个是用来设置logger的
+    # 主要做以下几件事情：
+    # 1. 设置level
+    # 2. 设置handler
+    # 3. 设置formatter
+    # 4. 添加handler
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
@@ -96,6 +111,8 @@ def save_dict_to_json(d, json_path):
         d: (dict) of float-castable values (np.float, int, float, etc.)
         json_path: (string) path to json file
     """
+    # 我明白了，json不接受除了python float以外的数据类型
+    # 所以这里得将其转化为python的float类型
     with open(json_path, 'w') as f:
         # We need to convert the values to float for json (it doesn't accept np.array, np.float, )
         d = {k: float(v) for k, v in d.items()}
@@ -111,18 +128,23 @@ def save_checkpoint(state, is_best, checkpoint):
         is_best: (bool) True if it is the best model seen till now
         checkpoint: (string) folder where parameters are to be saved
     """
+    # 这里是保存神经网络的各种权重
     filepath = os.path.join(checkpoint, 'last.pth.tar')
     if not os.path.exists(checkpoint):
         print("Checkpoint Directory does not exist! Making directory {}".format(checkpoint))
         os.mkdir(checkpoint)
     else:
         print("Checkpoint Directory exists! ")
+     # pytorch保存权重的方法
+    # torch.save(state, 路径)
     torch.save(state, filepath)
     if is_best:
+        # 这里的作用是直接用文件名进行覆盖
         shutil.copyfile(filepath, os.path.join(checkpoint, 'best.pth.tar'))
 
 
 def load_checkpoint(checkpoint, model, optimizer=None):
+    # 这里是加载神经网络的各种权重
     """Loads model parameters (state_dict) from file_path. If optimizer is provided, loads state_dict of
     optimizer assuming it is present in checkpoint.
 
@@ -133,6 +155,9 @@ def load_checkpoint(checkpoint, model, optimizer=None):
     """
     if not os.path.exists(checkpoint):
         raise("File doesn't exist {}".format(checkpoint))
+     # Pytorch加载神经网络权重的方法
+    # １. 用torch_load获得字典
+    #  2 . model load_state_dict获取对应权重
     checkpoint = torch.load(checkpoint)
     model.load_state_dict(checkpoint['state_dict'])
 
