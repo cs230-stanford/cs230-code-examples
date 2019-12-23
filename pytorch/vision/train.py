@@ -21,6 +21,8 @@ from evaluate import evaluate
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='data/64x64_SIGNS',
                     help="Directory containing the dataset")
+# model_dir储存的地方使我们存储1. hyper parameters 2. weights 3. metrics 4. logging的地方
+# 而model这个文件夹只是存储我们的代码的
 parser.add_argument('--model_dir', default='experiments/base_model',
                     help="Directory containing params.json")
 parser.add_argument('--restore_file', default=None,
@@ -157,7 +159,7 @@ def train_and_evaluate(model, train_dataloader, val_dataloader, optimizer, loss_
 
 
 if __name__ == '__main__':
-
+    # 1. 获取最重要的json文件，从中加载params
     # Load the parameters from json file
     args = parser.parse_args()
     json_path = os.path.join(args.model_dir, 'params.json')
@@ -168,18 +170,20 @@ if __name__ == '__main__':
     # use GPU if available
     params.cuda = torch.cuda.is_available()
 
+    # 这里设置manual_seed的话，可以保证我们每一次随机的效果都一样
     # Set the random seed for reproducible experiments
     torch.manual_seed(230)
     if params.cuda:
         torch.cuda.manual_seed(230)
 
+    # 2. 设置logger
     # Set the logger
     utils.set_logger(os.path.join(args.model_dir, 'train.log'))
-
     # Create the input data pipeline
     logging.info("Loading the datasets...")
 
     # fetch dataloaders
+    # 3. 获取data_loader
     dataloaders = data_loader.fetch_dataloader(
         ['train', 'val'], args.data_dir, params)
     train_dl = dataloaders['train']
@@ -188,14 +192,15 @@ if __name__ == '__main__':
     logging.info("- done.")
 
     # Define the model and optimizer
+    # 4. 定义我们的model, optimizer, loss_fn, metircs
     model = net.Net(params).cuda() if params.cuda else net.Net(params)
     optimizer = optim.Adam(model.parameters(), lr=params.learning_rate)
-
     # fetch loss function and metrics
     loss_fn = net.loss_fn
     metrics = net.metrics
 
+# 训练并评估
     # Train the model
-    logging.info("Starting training for {} epoch(s)".format(params.num_epochs))
+       logging.info("Starting training for {} epoch(s)".format(params.num_epochs))
     train_and_evaluate(model, train_dl, val_dl, optimizer, loss_fn, metrics, params, args.model_dir,
                        args.restore_file)
