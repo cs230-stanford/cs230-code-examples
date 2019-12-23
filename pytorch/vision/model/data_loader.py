@@ -31,6 +31,9 @@ class SIGNSDataset(Dataset):
             data_dir: (string) directory containing the dataset
             transform: (torchvision.transforms) transformation to apply on image
         """
+        # 这个地方的初始化和和我之前在博客上看到的又有所不同
+        # 这里初始化的属性是filenames和labels
+        # 最后在__getitem__方法中返回对应的x和y
         self.filenames = os.listdir(data_dir)
         self.filenames = [os.path.join(data_dir, f) for f in self.filenames if f.endswith('.jpg')]
 
@@ -69,6 +72,15 @@ def fetch_dataloader(types, data_dir, params):
     Returns:
         data: (dict) contains the DataLoader object for each type in types
     """
+    # 传入的参数有：
+    # 1. 你想要什么类型的数据?(训练集？cv集？还是测试集？)
+    # 2. 你的数据的目录
+    # 3. 你的参数（由于这个参数实在是包含太多信息了，所以很多地方都能看见他的身影）
+    
+    # 这个函数中具体的做法
+    # 就是根据你的传入的目录和types转化为对应的DataLoader
+    # 然后返回一个相应的字典
+    
     dataloaders = {}
 
     for split in ['train', 'val', 'test']:
