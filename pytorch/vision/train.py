@@ -113,6 +113,7 @@ def train_and_evaluate(model, train_dataloader, val_dataloader, optimizer, loss_
         model_dir: (string) directory containing config, weights and log
         restore_file: (string) optional- name of file to restore from (without its extension .pth.tar)
     """
+    # 如果指定了restore_file的话，就加载其中的模型
     # reload weights from restore_file if specified
     if restore_file is not None:
         restore_path = os.path.join(
@@ -153,6 +154,7 @@ def train_and_evaluate(model, train_dataloader, val_dataloader, optimizer, loss_
             utils.save_dict_to_json(val_metrics, best_json_path)
 
         # Save latest val metrics in a json file in the model directory
+        # 虽然我不知道这一步有什么用，难道不应该画learning curse吗
         last_json_path = os.path.join(
             model_dir, "metrics_val_last_weights.json")
         utils.save_dict_to_json(val_metrics, last_json_path)
