@@ -1,6 +1,6 @@
 # CS230 Code Examples
 
-[Tutorials](https://cs230-stanford.github.io)
+[Course website](https://cs230.stanford.edu)
 
 
 We are happy to introduce some code examples that you can use for your CS230 projects. The code contains examples for TensorFlow and PyTorch, in vision and NLP. The structure of the repository is the following:
