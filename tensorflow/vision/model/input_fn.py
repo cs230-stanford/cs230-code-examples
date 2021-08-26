@@ -73,7 +73,7 @@ def input_fn(is_training, filenames, labels, params):
         )
     else:
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-            .map(parse_fn)
+            .map(parse_fn,num_parallel_calls=tf.data.experimental.AUTOTUNE)
             .batch(params.batch_size)
             .prefetch(1)  # make sure you always have one batch ready to serve
         )
